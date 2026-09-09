@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/*
+  Offer tokens — runtime source of truth.
+  Tailwind names are mapped in @theme below.
+  Do not add forest-green. Visual matching waits on reference boards.
+  See docs/ui-reference.md.
+*/
+:root {
+  --offer-purple: #8e52ff;
+  --offer-lavender: #f3f4f9;
+  --offer-purple-gray: #7f7089;
+  --offer-border: #dadada;
+  --offer-black: #000000;
+  --offer-white: #ffffff;
+  --offer-error: #ff4da3;
+  --offer-success: #6cd23e;
+  --offer-turquoise: #49d7b8;
+  --offer-yellow: #f5cc00;
+  --offer-radius-card: 1.25rem;
+}
+
+@theme inline {
+  --color-purple: var(--offer-purple);
+  --color-lavender: var(--offer-lavender);
+  --color-purple-gray: var(--offer-purple-gray);
+  --color-border: var(--offer-border);
+  --color-black: var(--offer-black);
+  --color-white: var(--offer-white);
+  --color-error: var(--offer-error);
+  --color-success: var(--offer-success);
+  --color-turquoise: var(--offer-turquoise);
+  --color-yellow: var(--offer-yellow);
+  --font-sans: var(--font-sans);
+  --radius-card: var(--offer-radius-card);
+}
+
+body {
+  background: var(--offer-lavender);
+  color: var(--offer-black);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+}
