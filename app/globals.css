@@ -18,6 +18,8 @@
   --offer-turquoise: #49d7b8;
   --offer-yellow: #f5cc00;
   --offer-radius-card: 1.25rem;
+  --offer-radius-pill: 999px;
+  --offer-shadow-card: 0 14px 34px rgba(53, 32, 79, 0.08);
 }
 
 @theme inline {
@@ -33,10 +35,46 @@
   --color-yellow: var(--offer-yellow);
   --font-sans: var(--font-sans);
   --radius-card: var(--offer-radius-card);
+  --radius-pill: var(--offer-radius-pill);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--offer-lavender);
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--offer-lavender);
   color: var(--offer-black);
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--offer-purple) 24%, white);
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
