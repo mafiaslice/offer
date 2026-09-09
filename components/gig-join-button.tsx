@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useOffer } from "@/components/offer-provider";
 
 type GigJoinButtonProps = {
+  slug: string;
   kind: "Volunteer" | "Paid gig";
   roles: string[];
 };
 
-export function GigJoinButton({ kind, roles }: GigJoinButtonProps) {
+export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
+  const { applyToGig, hasApplied } = useOffer();
   const [open, setOpen] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState(() => hasApplied(slug));
   const [role, setRole] = useState(roles[0] ?? "General support");
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    applyToGig(slug, role);
     setSent(true);
   }
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "@/lib/nav";
 import { NavIcon } from "@/components/nav-icon";
+import { OfferProvider } from "@/components/offer-provider";
 
 type AppShellProps = {
   children: ReactNode;
@@ -14,7 +15,8 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh overflow-x-hidden bg-lavender">
+    <OfferProvider>
+      <div className="min-h-dvh overflow-x-hidden bg-lavender">
       <div className="pointer-events-none fixed inset-x-0 top-0 h-72 bg-[radial-gradient(circle_at_75%_0%,rgba(142,82,255,0.14),transparent_55%)]" />
 
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r border-black/5 bg-white/70 px-5 py-7 backdrop-blur-xl lg:flex lg:flex-col">
@@ -87,6 +89,7 @@ export function AppShell({ children }: AppShellProps) {
           </ul>
         </nav>
       </div>
-    </div>
+      </div>
+    </OfferProvider>
   );
 }
