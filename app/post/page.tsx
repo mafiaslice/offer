@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { PostGigForm } from "@/components/post-gig-form";
 
 export const metadata: Metadata = {
   title: "Post",
@@ -7,13 +7,13 @@ export const metadata: Metadata = {
 
 export default function PostPage() {
   return (
-    <PlaceholderPage
-      title="Post a Gig"
-      description="Hosts will create a Gig with Roles and Slots here. Posting is not wired — this is structure only."
-    >
-      <div className="rounded-card border border-border bg-white p-4 text-sm text-purple-gray">
-        Minimum fields, drafts, and who can post are still open decisions.
-      </div>
-    </PlaceholderPage>
+    <div className="mx-auto max-w-2xl space-y-7">
+      <header className="space-y-2">
+        <p className="text-sm font-semibold text-purple">Bring good people together</p>
+        <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Post a gig.</h1>
+        <p className="max-w-xl text-sm leading-6 text-purple-gray sm:text-base">Tell people what you&apos;re building, who you need, and how they can show up.</p>
+      </header>
+      <PostGigForm />
+    </div>
   );
 }
