@@ -46,8 +46,8 @@ export default function DiscoverPage() {
           <button type="button" className="text-sm font-bold text-purple">View all</button>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
-          <GigCard title="Hangout with Slice" hostName="Slice" kindLabel="Volunteer" locationLabel="Ikoyi" dateLabel="Sep 25 · 10 AM" imageTone="sunset" />
-          <GigCard title="Community food drive" hostName="Neighbourhood Hub" kindLabel="Volunteer" locationLabel="Yaba" dateLabel="Oct 02 · 8 AM" imageTone="mint" />
+          <GigCard href="/gigs/hangout-with-slice" title="Hangout with Slice" hostName="Slice" kindLabel="Volunteer" locationLabel="Ikoyi" dateLabel="Sep 25 · 10 AM" imageTone="sunset" />
+          <GigCard href="/gigs/community-food-drive" title="Community food drive" hostName="Neighbourhood Hub" kindLabel="Volunteer" locationLabel="Yaba" dateLabel="Oct 02 · 8 AM" imageTone="mint" />
         </div>
       </section>
 
@@ -56,7 +56,7 @@ export default function DiscoverPage() {
           <h2 id="for-you-heading" className="text-xl font-bold tracking-[-0.04em]">For you</h2>
           <button type="button" className="text-sm font-bold text-purple">View all</button>
         </div>
-        <GigCard title="Festival crew wanted" hostName="Live Works" kindLabel="Paid gig" locationLabel="Victoria Island" dateLabel="Oct 12 · 4 PM" imageTone="night" />
+        <GigCard href="/gigs/festival-crew" title="Festival crew wanted" hostName="Live Works" kindLabel="Paid gig" locationLabel="Victoria Island" dateLabel="Oct 12 · 4 PM" imageTone="night" />
       </section>
 
       <button type="button" className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-bold text-black shadow-[0_10px_24px_rgba(53,32,79,0.08)] transition-colors hover:bg-black hover:text-white">

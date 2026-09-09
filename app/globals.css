@@ -20,6 +20,7 @@
   --offer-radius-card: 1.25rem;
   --offer-radius-pill: 999px;
   --offer-shadow-card: 0 14px 34px rgba(53, 32, 79, 0.08);
+  --offer-font-sans: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
 }
 
 @theme inline {
@@ -33,7 +34,7 @@
   --color-success: var(--offer-success);
   --color-turquoise: var(--offer-turquoise);
   --color-yellow: var(--offer-yellow);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--offer-font-sans);
   --radius-card: var(--offer-radius-card);
   --radius-pill: var(--offer-radius-pill);
 }
@@ -50,7 +51,7 @@ html {
 body {
   background: var(--offer-lavender);
   color: var(--offer-black);
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--offer-font-sans), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
 

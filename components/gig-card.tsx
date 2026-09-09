@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 type GigCardProps = {
+  href?: string;
   title: string;
   hostName: string;
   kindLabel: "Volunteer" | "Paid gig";
@@ -12,6 +15,7 @@ type GigCardProps = {
  * on reference boards (docs/ui-reference.md).
  */
 export function GigCard({
+  href = "/gigs/hangout-with-slice",
   title,
   hostName,
   kindLabel,
@@ -46,9 +50,9 @@ export function GigCard({
       </div>
       <div className="space-y-3 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-bold leading-tight tracking-[-0.03em] text-black sm:text-xl">
+          <Link href={href} className="text-lg font-bold leading-tight tracking-[-0.03em] text-black sm:text-xl">
             {title}
-          </h2>
+          </Link>
           <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-lavender text-purple" aria-hidden>↗</span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-purple-gray">
@@ -58,7 +62,7 @@ export function GigCard({
         </div>
         <div className="flex items-center justify-between border-t border-black/5 pt-3">
           <span className="text-xs font-semibold text-purple-gray">8 spots left</span>
-          <button type="button" className="min-h-10 rounded-full bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple">View gig</button>
+          <Link href={href} className="flex min-h-10 items-center rounded-full bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple">View gig</Link>
         </div>
       </div>
     </article>
