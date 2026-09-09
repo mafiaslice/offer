@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { GigJoinButton } from "@/components/gig-join-button";
 
 type GigRecord = {
   title: string;
@@ -144,9 +145,7 @@ export default async function GigDetailsPage({
         </div>
       </section>
 
-      <div className="sticky bottom-3 z-10 rounded-2xl bg-black p-2 shadow-[0_16px_32px_rgba(0,0,0,0.2)]">
-        <button type="button" className="flex min-h-12 w-full items-center justify-center rounded-xl bg-purple px-5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-black">Join this gig</button>
-      </div>
+      <GigJoinButton kind={gig.kind} roles={gig.roles} />
     </div>
   );
 }
