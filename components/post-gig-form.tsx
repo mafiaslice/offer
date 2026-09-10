@@ -99,7 +99,7 @@ export function PostGigForm() {
       <section className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
         <div className="space-y-1"><h2 className="text-lg font-bold tracking-[-0.03em]">When and where</h2><p className="text-sm text-purple-gray">Help people know what showing up looks like.</p></div>
         <label className="block space-y-2"><span className={labelClass}>Place</span><div className="relative"><span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-purple-gray">⌖</span><input name="locationLabel" className={`${inputClass} pl-10`} placeholder="Search for a place or add an address" required /></div></label>
-        <div className="grid gap-4 sm:grid-cols-2"><label className="block space-y-2"><span className={labelClass}>Date</span><input name="date" type="date" className={inputClass} required /></label><label className="block space-y-2"><span className={labelClass}>Start time</span><input name="startTime" type="time" className={inputClass} required /></label></div>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="block space-y-2"><span className={labelClass}>Date</span><input name="date" type="date" className={inputClass} required /></label><label className="block space-y-2"><span className={labelClass}>Start time</span><input name="startTime" type="time" defaultValue="10:00" className={inputClass} required /></label></div>
       </section>
 
       <section className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
