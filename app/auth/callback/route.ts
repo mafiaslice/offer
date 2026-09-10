@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
+import { safeNextPath, signInHref } from "@/lib/auth";
+import { ensureProfile } from "@/lib/data";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-function safeNext(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/discover";
-  return value;
-}
-
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const next = safeNext(url.searchParams.get("next"));
+  const next = safeNextPath(url.searchParams.get("next"));
   const origin = url.origin;
 
   if (!isSupabaseConfigured()) {
@@ -41,15 +38,9 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
-    if (!profile) {
-      await supabase.from("profiles").upsert({
-        id: user.id,
-        display_name: user.user_metadata?.display_name ?? user.email?.split("@")[0] ?? "",
-        phone: user.phone ?? null,
-      });
-    } else if (!profile.display_name?.trim()) {
-      return NextResponse.redirect(new URL(`/auth?step=profile&next=${encodeURIComponent(next)}`, origin));
+    const profile = await ensureProfile({});
+    if (!profile?.displayName?.trim()) {
+      return NextResponse.redirect(new URL(`${signInHref(next)}&step=profile`, origin));
     }
   }
 

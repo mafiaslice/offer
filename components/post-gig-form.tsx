@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
 
 type GigKind = "volunteer" | "paid";
@@ -11,7 +12,7 @@ const labelClass = "text-sm font-bold text-black";
 
 export function PostGigForm() {
   const router = useRouter();
-  const { source, user } = useOffer();
+  const { source, user, ready } = useOffer();
   const [kind, setKind] = useState<GigKind>("volunteer");
   const [roles, setRoles] = useState(["Guest welcome & check-in"]);
   const [submitted, setSubmitted] = useState(false);
@@ -31,8 +32,8 @@ export function PostGigForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    if (source === "supabase" && !user) {
-      router.push("/auth?next=/post");
+    if (source === "supabase" && ready && !user) {
+      router.push(signInHref("/post"));
       return;
     }
 
@@ -61,7 +62,7 @@ export function PostGigForm() {
 
     if (!response.ok) {
       if (response.status === 401) {
-        router.push("/auth?next=/post");
+        router.push(signInHref("/post"));
         return;
       }
       setError(body.error ?? "Could not create this gig.");

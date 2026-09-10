@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
 
 type GigJoinButtonProps = {
@@ -12,7 +13,7 @@ type GigJoinButtonProps = {
 
 export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
   const router = useRouter();
-  const { applyToGig, hasApplied, source, user } = useOffer();
+  const { applyToGig, hasApplied, source, user, ready } = useOffer();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(() => hasApplied(slug));
   const [role, setRole] = useState(roles[0] ?? "General support");
@@ -23,8 +24,8 @@ export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    if (source === "supabase" && !user) {
-      router.push(`/auth?next=${encodeURIComponent(`/gigs/${slug}`)}`);
+    if (source === "supabase" && ready && !user) {
+      router.push(signInHref(`/gigs/${slug}`));
       return;
     }
     setBusy(true);
@@ -32,7 +33,7 @@ export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
     setBusy(false);
     if (!result.ok) {
       if (result.status === 401) {
-        router.push(`/auth?next=${encodeURIComponent(`/gigs/${slug}`)}`);
+        router.push(signInHref(`/gigs/${slug}`));
         return;
       }
       setError(result.error ?? "Could not send application.");

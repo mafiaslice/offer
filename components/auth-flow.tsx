@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
+import { safeNextPath } from "@/lib/auth";
 import { isSmsAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 import { useOffer } from "@/components/offer-provider";
+import type { SessionProfile } from "@/lib/data/types";
 
 type Step = "email" | "phone" | "otp" | "profile";
 type Role = "need" | "help" | "both";
@@ -14,8 +16,7 @@ type Channel = "email" | "phone";
 const inputClass = "min-h-13 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-medium text-black outline-none transition placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10";
 
 function safeNext(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/discover";
-  return value;
+  return safeNextPath(value);
 }
 
 export function AuthFlow() {
@@ -106,15 +107,13 @@ export function AuthFlow() {
             ? await supabase.auth.verifyOtp({ phone: phone.trim(), token, type: "sms" })
             : await supabase.auth.verifyOtp({ email: email.trim(), token, type: "email" });
         if (result.error) throw new Error(result.error.message);
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData.user;
-        if (user) {
-          const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle();
-          if (profile?.display_name?.trim()) {
-            await refresh();
-            setComplete(true);
-            return;
-          }
+        const me = await fetch("/api/me");
+        const body = (await me.json()) as { data?: SessionProfile | null; error?: string };
+        if (!me.ok) throw new Error(body.error ?? "Could not load your profile.");
+        await refresh();
+        if (body.data?.displayName?.trim()) {
+          setComplete(true);
+          return;
         }
       }
       setStep("profile");

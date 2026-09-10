@@ -25,16 +25,19 @@ import type {
   ListResult,
   MyActivity,
   MyGigCard,
+  ProfilePatch,
   SessionProfile,
   UserApplication,
 } from "@/lib/data/types";
 
 type GigRow = Database["public"]["Tables"]["gigs"]["Row"];
-type ProfileRow = Pick<Database["public"]["Tables"]["profiles"]["Row"], "display_name" | "avatar_url">;
+type AuthUser = { id: string; email?: string | null; phone?: string | null; user_metadata?: Record<string, unknown> };
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type HostProfile = Pick<ProfileRow, "display_name" | "avatar_url">;
 type RoleRow = Database["public"]["Tables"]["gig_roles"]["Row"];
 type SlotRow = Database["public"]["Tables"]["gig_slots"]["Row"];
 
-type GigWithHost = GigRow & { profiles: ProfileRow | ProfileRow[] | null };
+type GigWithHost = GigRow & { profiles: HostProfile | HostProfile[] | null };
 
 const source = "supabase" as const;
 
@@ -90,21 +93,19 @@ async function requireUser() {
   return { supabase, user };
 }
 
-export async function getSessionProfile(): Promise<SessionProfile | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+function fallbackDisplayName(user: AuthUser) {
+  const meta = user.user_metadata?.display_name;
+  const fromMeta = typeof meta === "string" ? meta.trim() : "";
+  return fromMeta || user.email?.split("@")[0] || "";
+}
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-
-  const displayName = profile?.display_name?.trim() || user.email?.split("@")[0] || "You";
+function toSessionProfile(user: AuthUser, profile: ProfileRow | null): SessionProfile {
+  const displayName = profile?.display_name?.trim() || fallbackDisplayName(user) || "You";
   return {
     id: user.id,
     displayName,
     initials: initialsFromName(displayName),
-    email: user.email,
+    email: user.email ?? undefined,
     phone: profile?.phone ?? user.phone ?? undefined,
     bio: profile?.bio ?? undefined,
     intent: profile?.intent ?? undefined,
@@ -112,17 +113,51 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
   };
 }
 
-export async function ensureProfile(input: { displayName?: string; bio?: string; intent?: "need" | "help" | "both"; phone?: string }) {
-  const { supabase, user } = await requireUser();
-  const displayName = input.displayName?.trim() || user.email?.split("@")[0] || "";
-  const { error } = await supabase.from("profiles").upsert({
-    id: user.id,
-    display_name: displayName,
-    bio: input.bio?.trim() || null,
-    intent: input.intent ?? null,
-    phone: input.phone?.trim() || user.phone || null,
-  });
+async function loadOrCreateProfile(supabase: Awaited<ReturnType<typeof createClient>>, user: AuthUser) {
+  const { data: existing } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  if (existing) return existing;
+
+  const { data: created, error } = await supabase
+    .from("profiles")
+    .upsert({
+      id: user.id,
+      display_name: fallbackDisplayName(user),
+      phone: user.phone || null,
+    })
+    .select("*")
+    .single();
   if (error) throw Object.assign(new Error(error.message), { status: 400 });
+  return created;
+}
+
+export async function getSessionProfile(): Promise<SessionProfile | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const profile = await loadOrCreateProfile(supabase, user);
+  return toSessionProfile(user, profile);
+}
+
+export async function ensureProfile(input: ProfilePatch) {
+  const { supabase, user } = await requireUser();
+  const existing = await loadOrCreateProfile(supabase, user);
+  const patch: Database["public"]["Tables"]["profiles"]["Update"] = {};
+
+  if (input.displayName !== undefined) {
+    patch.display_name = input.displayName.trim() || existing.display_name || fallbackDisplayName(user);
+  }
+  if (input.bio !== undefined) patch.bio = input.bio.trim() || null;
+  if (input.intent !== undefined) patch.intent = input.intent;
+  if (input.phone !== undefined) patch.phone = input.phone.trim() || null;
+
+  if (Object.keys(patch).length > 0) {
+    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id);
+    if (error) throw Object.assign(new Error(error.message), { status: 400 });
+  }
+
   return getSessionProfile();
 }
 

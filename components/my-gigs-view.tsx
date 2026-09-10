@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
 import type { HostApplicant, MyGigCard } from "@/lib/data/types";
 
@@ -34,7 +36,7 @@ function MyGigCardView({ gig, applicationStatus }: { gig: MyGigCard; application
   );
 }
 
-function ApplicationReview({ applicants, onDecide }: { applicants: HostApplicant[]; onDecide: (id: string, status: "accepted" | "declined") => Promise<void> }) {
+function ApplicationReview({ applicants, onDecide }: { applicants: HostApplicant[]; onDecide: (id: string, status: "accepted" | "declined") => Promise<boolean> }) {
   const [decisions, setDecisions] = useState<Record<string, "Accepted" | "Declined">>({});
   const title = applicants[0]?.gigTitle ?? "Your gig";
 
@@ -62,8 +64,8 @@ function ApplicationReview({ applicants, onDecide }: { applicants: HostApplicant
               </div>
               {!decision ? (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => { void onDecide(applicant.id, "declined").then(() => setDecisions((current) => ({ ...current, [applicant.id]: "Declined" }))); }} className="min-h-10 rounded-xl border border-black/10 text-xs font-bold text-purple-gray transition-colors hover:border-error hover:text-error">Decline</button>
-                  <button type="button" onClick={() => { void onDecide(applicant.id, "accepted").then(() => setDecisions((current) => ({ ...current, [applicant.id]: "Accepted" }))); }} className="min-h-10 rounded-xl bg-black text-xs font-bold text-white transition-colors hover:bg-purple">Accept</button>
+                  <button type="button" onClick={() => { void onDecide(applicant.id, "declined").then((ok) => { if (ok) setDecisions((current) => ({ ...current, [applicant.id]: "Declined" })); }); }} className="min-h-10 rounded-xl border border-black/10 text-xs font-bold text-purple-gray transition-colors hover:border-error hover:text-error">Decline</button>
+                  <button type="button" onClick={() => { void onDecide(applicant.id, "accepted").then((ok) => { if (ok) setDecisions((current) => ({ ...current, [applicant.id]: "Accepted" })); }); }} className="min-h-10 rounded-xl bg-black text-xs font-bold text-white transition-colors hover:bg-purple">Accept</button>
                 </div>
               ) : null}
             </div>
@@ -84,7 +86,8 @@ type MyGigsViewProps = {
 export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
   const [status, setStatus] = useState<GigStatus>("Upcoming");
   const [mode, setMode] = useState<"All" | GigMode>("All");
-  const { applications, reviewApplication, source } = useOffer();
+  const router = useRouter();
+  const { applications, reviewApplication, source, user, ready } = useOffer();
   const gigs = useMemo(() => [...joined, ...hosted], [hosted, joined]);
   const applicationBySlug = useMemo(() => new Map(applications.map((application) => [application.gigSlug, application.status])), [applications]);
   const filtered = useMemo(() => gigs.filter((gig) => gig.status === status && (mode === "All" || gig.mode === mode)), [gigs, mode, status]);
@@ -104,7 +107,18 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
       <div className="flex items-center justify-between"><div className="flex gap-5 border-b border-black/10"><button type="button" onClick={() => setStatus("Upcoming")} className={`relative pb-3 text-sm font-bold ${status === "Upcoming" ? "text-black" : "text-purple-gray"}`}>Upcoming{status === "Upcoming" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button><button type="button" onClick={() => setStatus("Completed")} className={`relative pb-3 text-sm font-bold ${status === "Completed" ? "text-black" : "text-purple-gray"}`}>Past{status === "Completed" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button></div><Link href="/post" className="text-sm font-bold text-purple">+ Post</Link></div>
 
       <div className="space-y-3">{filtered.length > 0 ? filtered.map((gig) => <MyGigCardView key={`${gig.mode}-${gig.id}-${gig.title}`} gig={gig} applicationStatus={applicationBySlug.get(gig.slug) ?? gig.applicationStatus} />) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
-      {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onDecide={async (id, nextStatus) => { await reviewApplication(id, nextStatus); }} /> : null}
+      {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onDecide={async (id, nextStatus) => {
+        if (source === "supabase" && ready && !user) {
+          router.push(signInHref("/my-gigs"));
+          return false;
+        }
+        const result = await reviewApplication(id, nextStatus);
+        if (!result.ok) {
+          if (result.status === 401) router.push(signInHref("/my-gigs"));
+          return false;
+        }
+        return true;
+      }} /> : null}
     </div>
   );
 }

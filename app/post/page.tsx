@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { PostGigForm } from "@/components/post-gig-form";
+import { redirectUnsignedToAuth } from "@/lib/require-session";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Post",
 };
 
-export default function PostPage() {
+export default async function PostPage() {
+  await redirectUnsignedToAuth("/post");
+
   return (
     <div className="mx-auto max-w-2xl space-y-7">
       <header className="space-y-2">

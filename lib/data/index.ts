@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import * as demo from "@/lib/data/demo-adapter";
 import * as supabase from "@/lib/data/supabase-adapter";
+import { initialsFromName } from "@/lib/data/format";
 import type {
   ApplyInput,
   CreateGigInput,
@@ -10,11 +11,12 @@ import type {
   GigListItem,
   ListResult,
   MyActivity,
+  ProfilePatch,
   SessionProfile,
   UserApplication,
 } from "@/lib/data/types";
 
-export type { DataSource, GigDetail, GigListItem, MyActivity, SessionProfile } from "@/lib/data/types";
+export type { DataSource, GigDetail, GigListItem, MyActivity, ProfilePatch, SessionProfile } from "@/lib/data/types";
 
 export function dataSource(): DataSource {
   return isSupabaseConfigured() ? "supabase" : "demo-adapter";
@@ -35,17 +37,13 @@ export async function getSessionProfile(): Promise<SessionProfile | null> {
   return demo.getSessionProfile();
 }
 
-export async function ensureProfile(input: {
-  displayName?: string;
-  bio?: string;
-  intent?: "need" | "help" | "both";
-  phone?: string;
-}): Promise<SessionProfile | null> {
+export async function ensureProfile(input: ProfilePatch): Promise<SessionProfile | null> {
   if (isSupabaseConfigured()) return supabase.ensureProfile(input);
+  const displayName = input.displayName?.trim() || "You";
   return {
     id: "demo-user",
-    displayName: input.displayName?.trim() || "You",
-    initials: "YO",
+    displayName,
+    initials: initialsFromName(displayName),
     bio: input.bio,
     intent: input.intent,
     phone: input.phone,

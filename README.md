@@ -21,6 +21,7 @@ npm run dev
 npm run build
 npm run lint
 npm run typecheck
+npm run seed:demo
 ```
 
 Dev server: [http://localhost:3000](http://localhost:3000) — `/` redirects to `/discover`.
@@ -35,18 +36,29 @@ Dev server: [http://localhost:3000](http://localhost:3000) — `/` redirects to 
 | `/messages` | Conversations |
 | `/profile` | Your profile |
 
-Payments, messaging backends, QR check-in, and identity verification are **not** implemented. Auth and Postgres use Supabase when env vars are set; otherwise the demo adapter keeps `npm run build` working.
+Payments, messaging backends, QR check-in, and identity verification are **not** implemented. Auth and Postgres use Supabase when env vars are set; otherwise the demo adapter keeps `npm run build` working. `/post` (and host review actions) require a signed-in session when Supabase is configured.
 
 ## Local with Supabase
 
-Without credentials the app uses the demo adapter (`meta.source: "demo-adapter"`).
+Without credentials the app uses the demo adapter (`meta.source: "demo-adapter"`) and Discover shows in-repo fixtures. When Supabase env is set, Discover reads Postgres only — an empty database shows a **No gigs yet** state with a Post CTA, not the demo catalog.
 
 1. Create a Supabase project and run `supabase/migrations/20260910000001_init_offer_schema.sql`.
 2. Enable Email auth. Add `http://localhost:3000/auth/callback` as a redirect URL.
 3. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 4. `npm run dev` and sign in at `/auth` with email OTP or the magic link.
+5. Optional demo rows after you have a profile:
 
-Optional demo rows: `scripts/seed-demo-gigs.sql` (opt-in; not required for build). Phone SMS stays gated until Twilio is configured. Full steps: [`docs/data-layer.md`](docs/data-layer.md).
+```bash
+npm run seed:demo
+```
+
+That reads `SUPABASE_SERVICE_ROLE_KEY` from `.env.local` (never commit it). Without the key:
+
+```bash
+psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
+```
+
+Phone SMS stays gated until Twilio is configured. Full steps: [`docs/data-layer.md`](docs/data-layer.md).
 
 ## Layout
 
