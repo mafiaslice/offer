@@ -26,7 +26,7 @@ npm run seed:demo
 
 Dev server: [http://localhost:3000](http://localhost:3000) — `/` redirects to `/discover`.
 
-## Routes (placeholders)
+## Routes
 
 | Path | Purpose |
 | --- | --- |
@@ -37,7 +37,7 @@ Dev server: [http://localhost:3000](http://localhost:3000) — `/` redirects to 
 | `/profile` | Your profile |
 | `/check-in/[token]` | Gig attendance (QR landing) |
 
-Payments, SMS, and identity verification are **not** implemented. In-app Host↔applicant threads and v1 QR check-in/out are. Auth and Postgres use Supabase when env vars are set; otherwise the demo adapter keeps `npm run build` working. `/post` and `/check-in/[token]` (and host review actions) require a signed-in session when Supabase is configured.
+Payments, SMS, and identity verification are **not** implemented. In-app Host↔applicant threads and v1 QR check-in/out are. Auth and Postgres use Supabase when env vars are set; otherwise the demo adapter keeps `npm run build` working. `/post` shows an in-page sign-in gate when Supabase is configured and you are signed out. `/check-in/[token]` still requires a session in that case.
 
 ## Local with Supabase
 
@@ -81,6 +81,7 @@ public/        Static assets
 - [`docs/ui-reference.md`](docs/ui-reference.md) — visual direction and tokens
 - [`docs/open-decisions.md`](docs/open-decisions.md) — unresolved product questions
 - [`docs/data-layer.md`](docs/data-layer.md) — Supabase setup and adapter behavior
+- [`docs/e2e-walkthrough.md`](docs/e2e-walkthrough.md) — local click path to verify Discover → detail → apply → My Gigs → Messages → Post → Profile
 
 ## Status
 

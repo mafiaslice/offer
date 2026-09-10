@@ -1,6 +1,22 @@
 import { demoChatMessages, demoGigDetails, demoInboxThreads, demoMyGigs, demoReviewQueue, demoStartable, toListItem } from "@/lib/data/demo-catalog";
 import { checkInPath, createCheckInToken, parseCheckInToken } from "@/lib/check-in-token";
-import { applicationUiStatus, avatarTone, checkInState, formatThreadTime, initialsFromName, MAX_MESSAGE_LENGTH, slugify } from "@/lib/data/format";
+import {
+  applicationUiStatus,
+  avatarTone,
+  checkInState,
+  combineDateAndTime,
+  coverToneFor,
+  formatDateLabel,
+  formatLongDateLabel,
+  formatSlotLabel,
+  formatThreadTime,
+  gigLifecycleStatus,
+  initialsFromName,
+  MAX_MESSAGE_LENGTH,
+  normalizeCategory,
+  slugify,
+  spotsLabel,
+} from "@/lib/data/format";
 import type {
   ApplyInput,
   ChatMessage,
@@ -16,6 +32,7 @@ import type {
   InboxThread,
   ListResult,
   MyActivity,
+  MyGigCard,
   SessionProfile,
   ThreadMessagesPayload,
   UserApplication,
@@ -23,6 +40,12 @@ import type {
 
 const source = "demo-adapter" as const;
 const DEMO_USER_ID = "demo-user";
+const extraGigs: GigDetail[] = [];
+const extraApplications: UserApplication[] = [];
+
+function allGigs() {
+  return [...extraGigs, ...demoGigDetails];
+}
 
 function matchesFilters(gig: GigDetail, filters: GigListFilters = {}) {
   const query = filters.query?.trim().toLowerCase() ?? "";
@@ -36,55 +59,107 @@ function matchesFilters(gig: GigDetail, filters: GigListFilters = {}) {
 }
 
 export function listGigs(filters: GigListFilters = {}): ListResult<ReturnType<typeof toListItem>[]> {
-  const data = demoGigDetails.filter((gig) => matchesFilters(gig, filters)).map(toListItem);
+  const data = allGigs().filter((gig) => matchesFilters(gig, filters)).map(toListItem);
   return { data, meta: { total: data.length, source } };
 }
 
 export function getGigBySlug(slug: string): GigDetail | null {
-  return demoGigDetails.find((gig) => gig.slug === slug) ?? null;
+  return allGigs().find((gig) => gig.slug === slug) ?? null;
 }
 
 export function getSessionProfile(): SessionProfile | null {
   return null;
 }
 
-export function listMyActivity(): MyActivity {
+function toHostedCard(gig: GigDetail): MyGigCard {
   return {
-    hosted: demoMyGigs.filter((gig) => gig.mode === "Hosted").map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
-    joined: demoMyGigs.filter((gig) => gig.mode === "Joined").map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
-    applications: [],
+    ...toListItem(gig),
+    mode: "Hosted",
+    status: gigLifecycleStatus(gig.startsAt, gig.status),
+    checkInToken: createCheckInToken(gig.id),
+  };
+}
+
+export function listMyActivity(): MyActivity {
+  const fixtureHosted = demoMyGigs.filter((gig) => gig.mode === "Hosted");
+  const fixtureJoined = demoMyGigs.filter((gig) => gig.mode === "Joined");
+  const hostedSlugs = new Set(fixtureHosted.map((gig) => gig.slug));
+  const joinedSlugs = new Set(fixtureJoined.map((gig) => gig.slug));
+
+  const hosted = [
+    ...fixtureHosted.map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
+    ...extraGigs.filter((gig) => !hostedSlugs.has(gig.slug)).map(toHostedCard),
+  ];
+
+  const joinedFromApps: MyGigCard[] = extraApplications.flatMap((application) => {
+    if (joinedSlugs.has(application.gigSlug)) return [];
+    const gig = getGigBySlug(application.gigSlug);
+    if (!gig) return [];
+    joinedSlugs.add(application.gigSlug);
+    return [
+      {
+        ...toListItem(gig),
+        mode: "Joined",
+        status: gigLifecycleStatus(gig.startsAt, gig.status),
+        applicationStatus: application.status,
+        checkInToken: createCheckInToken(gig.id),
+      },
+    ];
+  });
+
+  return {
+    hosted,
+    joined: [...fixtureJoined.map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })), ...joinedFromApps],
+    applications: extraApplications,
     reviewQueue: demoReviewQueue,
   };
 }
 
 export function createGig(input: CreateGigInput): GigDetail {
   const slug = slugify(input.title);
-  return {
+  const category = normalizeCategory(input.category);
+  const startsAt = combineDateAndTime(input.date, input.startTime);
+  const roles = input.roles.map((title) => title.trim()).filter(Boolean);
+  const gig: GigDetail = {
     id: `demo-${slug}`,
     slug,
     title: input.title,
     hostName: "You",
     hostInitials: "YO",
+    hostUserId: DEMO_USER_ID,
     kindLabel: input.kind === "paid" ? "Paid gig" : "Volunteer",
     locationLabel: input.locationLabel,
-    dateLabel: input.date,
-    longDateLabel: input.date,
-    imageTone: input.kind === "paid" ? "night" : "sunset",
-    category: "Events",
-    spotsLabel: `${input.slotCount} spots left`,
+    dateLabel: formatDateLabel(startsAt),
+    longDateLabel: formatLongDateLabel(startsAt),
+    imageTone: coverToneFor(input.kind, category),
+    category,
+    spotsLabel: spotsLabel(input.slotCount),
     summary: input.summary,
     about: input.summary,
-    roles: input.roles,
+    roles,
+    roleDetails: roles.map((title) => ({ title })),
+    slots: [
+      {
+        startsAt,
+        timeLabel: formatSlotLabel(startsAt),
+        capacity: input.slotCount,
+      },
+    ],
     incentive: input.incentive ?? "",
     instructions: input.instructions ?? "",
     verified: false,
+    startsAt,
     status: "open",
   };
+  extraGigs.unshift(gig);
+  return gig;
 }
 
 export function applyToGig(input: ApplyInput): UserApplication {
   const gig = getGigBySlug(input.gigSlug);
-  return {
+  const existing = extraApplications.find((application) => application.gigSlug === input.gigSlug);
+  if (existing) return existing;
+  const application: UserApplication = {
     id: `demo-app-${input.gigSlug}`,
     gigId: gig?.id ?? `demo-${input.gigSlug}`,
     gigSlug: input.gigSlug,
@@ -96,6 +171,8 @@ export function applyToGig(input: ApplyInput): UserApplication {
     createdAt: new Date().toISOString(),
     note: input.note,
   };
+  extraApplications.unshift(application);
+  return application;
 }
 
 export function reviewApplication(id: string, status: "accepted" | "declined") {
@@ -219,10 +296,10 @@ function resolveDemoGig(input: CheckInWriteInput) {
     throw Object.assign(new Error("Check-in code is not valid."), { status: 404 });
   }
   const gig = parsed
-    ? demoGigDetails.find((item) => item.id === parsed.gigId) ?? demoMyGigs.find((item) => item.id === parsed.gigId)
-    : demoGigDetails.find((item) => item.slug === input.gigSlug) ?? demoMyGigs.find((item) => item.slug === input.gigSlug);
+    ? allGigs().find((item) => item.id === parsed.gigId) ?? demoMyGigs.find((item) => item.id === parsed.gigId)
+    : allGigs().find((item) => item.slug === input.gigSlug) ?? demoMyGigs.find((item) => item.slug === input.gigSlug);
   if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
-  const detail = "summary" in gig ? gig : demoGigDetails.find((item) => item.slug === gig.slug) ?? demoGigDetails[0];
+  const detail = "summary" in gig ? gig : allGigs().find((item) => item.slug === gig.slug) ?? demoGigDetails[0];
   const slotId = input.slotId?.trim() || parsed?.slotId;
   const token = createCheckInToken(gig.id, slotId);
   return { gig: detail, slotId, token, viaToken: Boolean(parsed) };
@@ -256,7 +333,10 @@ function demoParticipantsFor(gigId: string, gigSlug: string): CheckInParticipant
 
 export function getCheckInContext(input: CheckInWriteInput): CheckInContext {
   const { gig, token, slotId, viaToken } = resolveDemoGig(input);
-  const hostedSlugs = new Set(demoMyGigs.filter((item) => item.mode === "Hosted").map((item) => item.slug));
+  const hostedSlugs = new Set([
+    ...demoMyGigs.filter((item) => item.mode === "Hosted").map((item) => item.slug),
+    ...extraGigs.map((item) => item.slug),
+  ]);
   const viewerRole = viaToken ? "accepted" : hostedSlugs.has(gig.slug) ? "host" : "unsigned";
   const participants = viewerRole === "host" ? demoParticipantsFor(gig.id, gig.slug) : [];
   const records = demoCheckIns.filter((row) => row.gigId === gig.id);

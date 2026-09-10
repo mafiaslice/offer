@@ -16,14 +16,22 @@ function toneClass(tone: MyGigCard["imageTone"]) {
     sunset: "from-[#ffcf91] via-[#ff7da8] to-[#8e52ff]",
     mint: "from-[#bcebdc] via-[#77d9c4] to-[#7b8cff]",
     night: "from-[#29244b] via-[#6e49a8] to-[#ff4da3]",
-  }[tone];
+  }[tone ?? "sunset"] ?? "from-[#ffcf91] via-[#ff7da8] to-[#8e52ff]";
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
   return <div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">{value}</p><p className="mt-1 text-xs font-semibold text-purple-gray">{label}</p></div>;
 }
 
-function MyGigCardView({ gig, applicationStatus, onMessage }: { gig: MyGigCard; applicationStatus?: "Applied" | "Accepted" | "Declined"; onMessage?: () => void }) {
+function MyGigCardView({
+  gig,
+  applicationStatus,
+  onMessage,
+}: {
+  gig: MyGigCard;
+  applicationStatus?: "Applied" | "Accepted" | "Declined";
+  onMessage?: () => void;
+}) {
   return (
     <article className="rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">
       <Link href={`/gigs/${gig.slug}`} className="group flex gap-3 p-3 transition-transform hover:-translate-y-0.5 sm:gap-4 sm:p-4">
@@ -91,9 +99,10 @@ type MyGigsViewProps = {
   hosted: MyGigCard[];
   joined: MyGigCard[];
   reviewQueue: HostApplicant[];
+  loadError?: string;
 };
 
-export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
+export function MyGigsView({ hosted, joined, reviewQueue, loadError }: MyGigsViewProps) {
   const [status, setStatus] = useState<GigStatus>("Upcoming");
   const [mode, setMode] = useState<"All" | GigMode>("All");
   const router = useRouter();
@@ -101,10 +110,10 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
   const gigs = useMemo(() => [...joined, ...hosted], [hosted, joined]);
   const applicationBySlug = useMemo(() => new Map(applications.map((application) => [application.gigSlug, application.status])), [applications]);
   const filtered = useMemo(() => gigs.filter((gig) => gig.status === status && (mode === "All" || gig.mode === mode)), [gigs, mode, status]);
-  const extraJoined = applications.filter((application) => !gigs.some((gig) => gig.slug === application.gigSlug)).length;
-  const joinedCount = source === "demo-adapter" ? 3 + extraJoined : joined.length;
-  const hostedCount = source === "demo-adapter" ? 1 : hosted.length;
-  const peopleMet = source === "demo-adapter" ? "12" : "—";
+  const joinedCount = joined.length;
+  const hostedCount = hosted.length;
+  const needsSignIn = source === "supabase" && ready && !user;
+  const showReview = reviewQueue.length > 0 && status === "Upcoming" && mode !== "Joined";
 
   async function openThread(input: EnsureThreadInput) {
     if (source === "supabase" && ready && !user) {
@@ -123,8 +132,25 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
     <div className="mx-auto max-w-3xl space-y-7">
       <header className="space-y-2"><p className="text-sm font-semibold text-purple">Your activity</p><h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">My gigs.</h1><p className="text-sm leading-6 text-purple-gray sm:text-base">Keep track of where you&apos;re showing up and what you&apos;re building.</p></header>
 
-      <div className="grid grid-cols-3 gap-3"><Stat value={String(joinedCount)} label="Joined" /><Stat value={String(hostedCount)} label="Hosted" /><Stat value={peopleMet} label="People met" /></div>
+      <div className="grid grid-cols-3 gap-3"><Stat value={String(joinedCount)} label="Joined" /><Stat value={String(hostedCount)} label="Hosted" /><Stat value="—" label="People met" /></div>
 
+      {needsSignIn ? (
+        <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
+          <p className="text-base font-bold">Sign in to see your gigs</p>
+          <p className="mt-2 text-sm leading-6 text-purple-gray">Hosted and applied gigs, Message host/applicant, and the check-in QR live here after you sign in.</p>
+          <Link href={signInHref("/my-gigs")} className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Sign in</Link>
+        </div>
+      ) : null}
+
+      {loadError ? (
+        <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
+          <p className="text-base font-bold">My Gigs couldn&apos;t load</p>
+          <p className="mt-2 text-sm leading-6 text-purple-gray">{loadError}</p>
+        </div>
+      ) : null}
+
+      {!needsSignIn ? (
+        <>
       <div className="flex rounded-2xl bg-white p-1.5 shadow-sm"><button type="button" onClick={() => setMode("All")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${mode === "All" ? "bg-black text-white" : "text-purple-gray"}`}>All gigs</button><button type="button" onClick={() => setMode("Joined")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${mode === "Joined" ? "bg-black text-white" : "text-purple-gray"}`}>Joined</button><button type="button" onClick={() => setMode("Hosted")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${mode === "Hosted" ? "bg-black text-white" : "text-purple-gray"}`}>Hosted</button></div>
 
       <div className="flex items-center justify-between"><div className="flex gap-5 border-b border-black/10"><button type="button" onClick={() => setStatus("Upcoming")} className={`relative pb-3 text-sm font-bold ${status === "Upcoming" ? "text-black" : "text-purple-gray"}`}>Upcoming{status === "Upcoming" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button><button type="button" onClick={() => setStatus("Completed")} className={`relative pb-3 text-sm font-bold ${status === "Completed" ? "text-black" : "text-purple-gray"}`}>Past{status === "Completed" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button></div><Link href="/post" className="text-sm font-bold text-purple">+ Post</Link></div>
@@ -135,7 +161,7 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
           {gig.mode === "Hosted" ? <GigCheckInPanel gigSlug={gig.slug} compact /> : null}
         </div>
       )) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
-      {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onMessage={(applicationId) => { void openThread({ applicationId }); }} onDecide={async (id, nextStatus) => {
+      {showReview ? <ApplicationReview applicants={reviewQueue} onMessage={(applicationId) => { void openThread({ applicationId }); }} onDecide={async (id, nextStatus) => {
         if (source === "supabase" && ready && !user) {
           router.push(signInHref("/my-gigs"));
           return false;
@@ -147,6 +173,8 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
         }
         return true;
       }} /> : null}
+        </>
+      ) : null}
     </div>
   );
 }

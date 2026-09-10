@@ -10,8 +10,10 @@ import {
   coverToneFor,
   formatDateLabel,
   formatLongDateLabel,
+  formatSlotLabel,
   formatThreadTime,
   gigLifecycleStatus,
+  imageTone,
   initialsFromName,
   kindLabel,
   MAX_MESSAGE_LENGTH,
@@ -72,7 +74,7 @@ function toListItem(gig: GigWithHost, capacity?: number | null): GigListItem {
     kindLabel: kindLabel(gig.kind),
     locationLabel: gig.location_label ?? "Location TBA",
     dateLabel: formatDateLabel(gig.starts_at),
-    imageTone: gig.cover_tone,
+    imageTone: imageTone(gig.cover_tone),
     category: gig.category,
     spotsLabel: spotsLabel(capacity),
   };
@@ -81,13 +83,33 @@ function toListItem(gig: GigWithHost, capacity?: number | null): GigListItem {
 function toDetail(gig: GigWithHost, roles: RoleRow[], slots: SlotRow[]): GigDetail {
   const capacity = slots.reduce((sum, slot) => sum + (slot.capacity ?? 0), 0) || roles.reduce((sum, role) => sum + (role.capacity ?? 0), 0);
   const list = toListItem(gig, capacity || null);
+  const roleTitleById = new Map(roles.map((role) => [role.id, role.title]));
+  const roleDetails = roles
+    .map((role) => ({
+      title: role.title.trim(),
+      description: role.description?.trim() || undefined,
+      capacity: role.capacity ?? undefined,
+    }))
+    .filter((role) => role.title);
+  const slotViews = slots.map((row) => ({
+    id: row.id,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at ?? undefined,
+    timeLabel: formatSlotLabel(row.starts_at, row.ends_at),
+    capacity: row.capacity ?? undefined,
+    roleTitle: (row.role_id && roleTitleById.get(row.role_id)) || undefined,
+  }));
+  const summary = gig.summary?.trim() ?? "";
   return {
     ...list,
-    summary: gig.summary,
-    about: gig.summary,
+    imageTone: imageTone(gig.cover_tone),
+    summary,
+    about: summary,
     hostInitials: initialsFromName(list.hostName),
     longDateLabel: formatLongDateLabel(gig.starts_at),
-    roles: roles.map((role) => role.title).filter(Boolean),
+    roles: roleDetails.map((role) => role.title),
+    roleDetails,
+    slots: slotViews,
     incentive: gig.incentive ?? "",
     instructions: gig.instructions ?? "",
     verified: false,

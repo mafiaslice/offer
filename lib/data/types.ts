@@ -19,12 +19,31 @@ export type GigListItem = {
   spotsLabel: string;
 };
 
+/** Role as shown on gig detail. Titles stay the apply/join dropdown values. */
+export type GigRoleView = {
+  title: string;
+  description?: string;
+  capacity?: number;
+};
+
+/** Slot as shown on gig detail. Time/capacity windows already stored on gig_slots. */
+export type GigSlotView = {
+  id?: string;
+  startsAt: string;
+  endsAt?: string;
+  timeLabel: string;
+  capacity?: number;
+  roleTitle?: string;
+};
+
 export type GigDetail = GigListItem & {
   summary: string;
   about: string;
   hostInitials: string;
   longDateLabel: string;
   roles: string[];
+  roleDetails: GigRoleView[];
+  slots: GigSlotView[];
   incentive: string;
   instructions: string;
   verified: boolean;

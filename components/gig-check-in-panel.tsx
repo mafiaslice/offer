@@ -90,7 +90,7 @@ function ParticipantRow({
 export function GigCheckInPanel({ gigSlug, compact }: GigCheckInPanelProps) {
   const [context, setContext] = useState<CheckInContext | null>(null);
   const [error, setError] = useState("");
-  const [open, setOpen] = useState(!compact);
+  const [open, setOpen] = useState(true);
 
   const refresh = useCallback(async () => {
     try {

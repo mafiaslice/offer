@@ -26,6 +26,39 @@ export function coverToneFor(kind: "volunteer" | "paid", category: GigCategory):
   return "sunset";
 }
 
+export const IMAGE_TONES = ["sunset", "mint", "night"] as const;
+
+export const TONE_GRADIENTS: Record<ImageTone, string> = {
+  sunset: "from-[#ffcf91] via-[#ff7da8] to-[#8e52ff]",
+  mint: "from-[#bcebdc] via-[#77d9c4] to-[#7b8cff]",
+  night: "from-[#29244b] via-[#6e49a8] to-[#ff4da3]",
+};
+
+export function imageTone(value?: string | null): ImageTone {
+  if (value === "mint" || value === "night" || value === "sunset") return value;
+  return "sunset";
+}
+
+export function toneGradient(value?: string | null) {
+  return TONE_GRADIENTS[imageTone(value)];
+}
+
+export function formatSlotLabel(startsAt?: string | null, endsAt?: string | null) {
+  const start = formatLongDateLabel(startsAt);
+  if (!endsAt) return start;
+  const end = new Date(endsAt);
+  if (Number.isNaN(end.getTime())) return start;
+  const endTime = end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${start} – ${endTime}`;
+}
+
+export function roleTitlesFrom(roles: Array<string | { title?: string | null }> | null | undefined) {
+  if (!roles?.length) return [];
+  return roles
+    .map((role) => (typeof role === "string" ? role : role.title)?.trim())
+    .filter((title): title is string => Boolean(title));
+}
+
 export function initialsFromName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "O";

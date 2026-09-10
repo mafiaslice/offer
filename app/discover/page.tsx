@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DiscoverView } from "@/components/discover-view";
-import { listGigs } from "@/lib/data";
+import { errorMessage, listGigs } from "@/lib/data";
+import type { GigListItem } from "@/lib/data/types";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,13 @@ export const metadata: Metadata = {
 };
 
 export default async function DiscoverPage() {
-  const { data } = await listGigs();
-  return <DiscoverView initialGigs={data} />;
+  let gigs: GigListItem[] = [];
+  let loadError: string | undefined;
+  try {
+    const { data } = await listGigs();
+    gigs = data;
+  } catch (error) {
+    loadError = errorMessage(error);
+  }
+  return <DiscoverView initialGigs={gigs} loadError={loadError} />;
 }

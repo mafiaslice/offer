@@ -175,14 +175,36 @@ export function MessagesView() {
   }
 
   if (selectedId) {
+    if (unauthorized) {
+      return (
+        <div className="mx-auto max-w-2xl space-y-5">
+          <header className="flex items-center gap-3">
+            <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages">←</button>
+            <h1 className="text-lg font-bold tracking-[-0.04em]">Sign in to message</h1>
+          </header>
+          <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
+            <p className="text-base font-bold">This thread needs a session</p>
+            <p className="mt-2 text-sm leading-6 text-purple-gray">Host↔applicant conversations stay on Offer. Sign in to read and reply.</p>
+            <Link href={signInHref(`/messages?thread=${selectedId}`)} className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Sign in</Link>
+          </div>
+        </div>
+      );
+    }
     const thread = active?.id === selectedId ? active : threads.find((item) => item.id === selectedId) ?? active;
     if (!thread) {
       return (
         <div className="mx-auto max-w-2xl space-y-5">
           <header className="flex items-center gap-3">
             <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages">←</button>
-            <h1 className="text-lg font-bold tracking-[-0.04em]">Loading conversation…</h1>
+            <h1 className="text-lg font-bold tracking-[-0.04em]">{error || loading ? (error || "Loading conversation…") : "Loading conversation…"}</h1>
           </header>
+          {error ? (
+            <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
+              <p className="text-base font-bold">Conversation not found</p>
+              <p className="mt-2 text-sm leading-6 text-purple-gray">That thread isn&apos;t available. Message a host or applicant from My Gigs.</p>
+              <Link href="/my-gigs" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">My gigs</Link>
+            </div>
+          ) : null}
         </div>
       );
     }

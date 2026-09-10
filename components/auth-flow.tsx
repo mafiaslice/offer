@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
-import { safeNextPath } from "@/lib/auth";
+import { authIntentCopy, safeNextPath } from "@/lib/auth";
 import { isSmsAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
 import { useOffer } from "@/components/offer-provider";
@@ -195,9 +195,9 @@ export function AuthFlow() {
       {step === "email" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <p className="text-sm font-semibold text-purple">Welcome to Offer</p>
+            <p className="text-sm font-semibold text-purple">{next === "/discover" ? "Welcome to Offer" : "Sign in to continue"}</p>
             <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Good people<br />make things happen.</h1>
-            <p className="max-w-sm text-sm leading-6 text-purple-gray">Join the place for trusted hands, volunteer gigs, and people building something together.</p>
+            <p className="max-w-sm text-sm leading-6 text-purple-gray">{authIntentCopy(next)}</p>
           </header>
           <form onSubmit={submitEmail} className="space-y-4 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
             <label className="block space-y-2">

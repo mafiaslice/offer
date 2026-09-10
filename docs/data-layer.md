@@ -24,7 +24,7 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, mes
 - `POST /api/check-ins` — `{ token \| gigSlug, userId?, slotId? }` check in (self, or Host on behalf of an accepted participant)
 - `POST /api/check-ins/checkout` — same body; sets `checked_out_at`
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Check-in writes in the demo adapter stay in server memory for that process. `/post` and `/check-in/[token]` redirect unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
+When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Check-in writes in the demo adapter stay in server memory for that process. `/post` shows an in-page sign-in gate for unsigned visitors when Supabase is configured. `/check-in/[token]` redirects unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
 
 ## Local with Supabase
 
@@ -48,7 +48,7 @@ npm run seed:demo
 psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
 ```
 
-This is **opt-in** and is not required for build. When Supabase env is set and the database has no open gigs, Discover shows an empty state with a Post CTA — it does not fall back to the demo catalog.
+This is **opt-in** and is not required for build. Seeded rows include roles (with descriptions), slots, and a fuller summary so gig detail feels real. When Supabase env is set and the database has no open gigs, Discover shows an empty state with a Post CTA — it does not fall back to the demo catalog.
 
 Do not commit `.env.local`. The app uses anon + RLS. `SUPABASE_SERVICE_ROLE_KEY` is unused by the Next.js app (optional for the seed script only).
 
@@ -61,6 +61,7 @@ Phone SMS needs Twilio on the project. Keep `NEXT_PUBLIC_SUPABASE_SMS_AUTH` unse
 - Application statuses in the database: `pending`, `accepted`, `declined`, `withdrawn`.
 - Cover photos are not uploaded in this slice; UI keeps the gradient `cover_tone`.
 - No payment provider. Paid gigs store incentive text only.
+- Gig detail maps `gigs.summary` to both the short summary and the about/body. Role descriptions and slot windows come from `gig_roles` / `gig_slots` when present; the UI shows empty copy when they are missing.
 - v1 messaging is **one 1:1 thread per** `(gig_id, host_user_id, participant_user_id)`. Participants read/write their thread; hosts also see threads on their gigs. Apply/accept does not insert a thread until someone opens the conversation.
 - Unread is a last-inbound badge (not a full count). Online/presence is demo-only.
 - v1 check-in is **one row per** `(gig_id, user_id)` with optional `slot_id`. The QR token is HMAC-signed (`CHECK_IN_SECRET`, with a demo fallback) and encodes the gig id. Hosts manage rows on their gigs; participants read/write their own after the host accepts them.
