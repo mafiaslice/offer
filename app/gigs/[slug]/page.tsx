@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GigJoinButton } from "@/components/gig-join-button";
-import { getGigBySlug, listGigs } from "@/lib/data";
+import { getGigBySlug } from "@/lib/data";
 
 const tones = {
   sunset: "from-[#ffcf91] via-[#ff7da8] to-[#8e52ff]",
@@ -10,10 +10,7 @@ const tones = {
   night: "from-[#29244b] via-[#6e49a8] to-[#ff4da3]",
 };
 
-export async function generateStaticParams() {
-  const { data } = await listGigs();
-  return data.map((gig) => ({ slug: gig.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

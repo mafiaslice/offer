@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { DiscoverView } from "@/components/discover-view";
 import { listGigs } from "@/lib/data";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Discover",
 };

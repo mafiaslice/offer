@@ -1,3 +1,4 @@
+import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
@@ -125,7 +126,7 @@ export async function ensureProfile(input: { displayName?: string; bio?: string;
   return getSessionProfile();
 }
 
-async function loadCapacityByGig(supabase: Awaited<ReturnType<typeof createClient>>, gigIds: string[]) {
+async function loadCapacityByGig(supabase: { from: ReturnType<typeof createPublicClient>["from"] }, gigIds: string[]) {
   if (gigIds.length === 0) return new Map<string, number>();
   const { data } = await supabase.from("gig_slots").select("gig_id, capacity").in("gig_id", gigIds);
   const map = new Map<string, number>();
@@ -136,7 +137,7 @@ async function loadCapacityByGig(supabase: Awaited<ReturnType<typeof createClien
 }
 
 export async function listGigs(filters: GigListFilters = {}): Promise<ListResult<GigListItem[]>> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   let query = supabase
     .from("gigs")
     .select("*, profiles!gigs_host_user_id_fkey ( display_name, avatar_url )")
@@ -166,7 +167,7 @@ export async function listGigs(filters: GigListFilters = {}): Promise<ListResult
 }
 
 export async function getGigBySlug(slug: string): Promise<GigDetail | null> {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("gigs")
     .select("*, profiles!gigs_host_user_id_fkey ( display_name, avatar_url )")
