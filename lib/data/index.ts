@@ -4,6 +4,7 @@ import * as supabase from "@/lib/data/supabase-adapter";
 import { initialsFromName } from "@/lib/data/format";
 import type {
   ApplyInput,
+  CheckInWriteInput,
   CreateGigInput,
   DataSource,
   EnsureThreadInput,
@@ -20,6 +21,11 @@ import type {
 
 export type {
   ChatMessage,
+  CheckInContext,
+  CheckInParticipant,
+  CheckInRecord,
+  CheckInViewerRole,
+  CheckInWriteInput,
   DataSource,
   EnsureThreadInput,
   GigDetail,
@@ -118,6 +124,27 @@ export async function ensureThread(input: EnsureThreadInput) {
     return { data: result.thread, created: result.created, source: "supabase" as const, persisted: true };
   }
   return { data: demo.ensureThread(input), created: false, source: "demo-adapter" as const, persisted: false };
+}
+
+export async function getCheckInContext(input: CheckInWriteInput) {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.getCheckInContext(input), source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.getCheckInContext(input), source: "demo-adapter" as const, persisted: false };
+}
+
+export async function checkIn(input: CheckInWriteInput) {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.checkIn(input), source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.checkIn(input), source: "demo-adapter" as const, persisted: false };
+}
+
+export async function checkOut(input: CheckInWriteInput) {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.checkOut(input), source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.checkOut(input), source: "demo-adapter" as const, persisted: false };
 }
 
 export function httpStatus(error: unknown, fallback = 500) {

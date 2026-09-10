@@ -312,6 +312,41 @@ export type Database = {
           },
         ];
       };
+      check_ins: {
+        Row: {
+          id: string;
+          gig_id: string;
+          slot_id: string | null;
+          user_id: string;
+          checked_in_at: string;
+          checked_out_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          gig_id: string;
+          slot_id?: string | null;
+          user_id: string;
+          checked_in_at?: string;
+          checked_out_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          gig_id?: string;
+          slot_id?: string | null;
+          user_id?: string;
+          checked_in_at?: string;
+          checked_out_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_gig_id_fkey";
+            columns: ["gig_id"];
+            isOneToOne: false;
+            referencedRelation: "gigs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;

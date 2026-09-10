@@ -133,6 +133,61 @@ export type MyGigCard = GigListItem & {
   mode: "Joined" | "Hosted";
   status: "Upcoming" | "Completed";
   applicationStatus?: ApplicationUiStatus;
+  checkInToken?: string;
+};
+
+export type CheckInViewerRole = "host" | "accepted" | "pending" | "none" | "unsigned";
+
+export type CheckInRecord = {
+  id: string;
+  gigId: string;
+  gigSlug: string;
+  gigTitle: string;
+  slotId?: string;
+  userId: string;
+  displayName: string;
+  initials: string;
+  roleLabel: string;
+  checkedInAt: string;
+  checkedOutAt?: string;
+};
+
+export type CheckInParticipant = {
+  userId: string;
+  displayName: string;
+  initials: string;
+  roleLabel: string;
+  applicationId: string;
+  checkIn: CheckInRecord | null;
+};
+
+export type CheckInGigSummary = {
+  id: string;
+  slug: string;
+  title: string;
+  hostName: string;
+  hostUserId?: string;
+  dateLabel: string;
+  locationLabel: string;
+  kindLabel: GigKindLabel;
+};
+
+export type CheckInContext = {
+  token: string;
+  path: string;
+  slotId?: string;
+  gig: CheckInGigSummary;
+  viewerRole: CheckInViewerRole;
+  ownCheckIn: CheckInRecord | null;
+  checkIns: CheckInRecord[];
+  participants: CheckInParticipant[];
+};
+
+export type CheckInWriteInput = {
+  token?: string;
+  gigSlug?: string;
+  userId?: string;
+  slotId?: string;
 };
 
 export type CreateGigInput = {
