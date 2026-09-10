@@ -1,19 +1,48 @@
 import { NextResponse } from "next/server";
-import { demoGigs } from "@/lib/gig-data";
+import { createGig, dataSource, errorMessage, httpStatus, listGigs } from "@/lib/data";
+import type { CreateGigInput } from "@/lib/data/types";
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q")?.trim().toLowerCase() ?? "";
-  const category = url.searchParams.get("category");
-  const kind = url.searchParams.get("kind");
+  try {
+    const result = await listGigs({
+      query: url.searchParams.get("q") ?? undefined,
+      category: url.searchParams.get("category") ?? undefined,
+      kind: url.searchParams.get("kind") ?? undefined,
+    });
+    return NextResponse.json(result);
+  } catch (error) {
+    return NextResponse.json(
+      { data: [], meta: { total: 0, source: dataSource() }, error: errorMessage(error) },
+      { status: httpStatus(error) },
+    );
+  }
+}
 
-  const gigs = demoGigs.filter((gig) => {
-    const searchable = `${gig.title} ${gig.hostName} ${gig.locationLabel} ${gig.category}`.toLowerCase();
-    const matchesQuery = !query || searchable.includes(query);
-    const matchesCategory = !category || category === "all" || gig.category.toLowerCase() === category.toLowerCase();
-    const matchesKind = !kind || kind === "all" || gig.kindLabel.toLowerCase() === kind.toLowerCase();
-    return matchesQuery && matchesCategory && matchesKind;
-  });
+export async function POST(request: Request) {
+  try {
+    const body = (await request.json()) as Partial<CreateGigInput>;
+    if (!body.title?.trim() || !body.summary?.trim() || !body.date || !body.startTime || !body.locationLabel?.trim()) {
+      return NextResponse.json({ error: "Title, summary, place, date, and start time are required." }, { status: 400 });
+    }
 
-  return NextResponse.json({ data: gigs, meta: { total: gigs.length, source: "demo-adapter" } });
+    const result = await createGig({
+      title: body.title,
+      summary: body.summary,
+      kind: body.kind === "paid" ? "paid" : "volunteer",
+      category: body.category ?? "Events",
+      locationLabel: body.locationLabel,
+      locationType: body.locationType === "remote" ? "remote" : "in-person",
+      date: body.date,
+      startTime: body.startTime,
+      slotCount: Math.max(1, Number(body.slotCount) || 1),
+      roles: Array.isArray(body.roles) ? body.roles : [],
+      incentive: body.incentive,
+      instructions: body.instructions,
+    });
+
+    return NextResponse.json({ data: result.gig, meta: { source: result.source, persisted: result.persisted } }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: errorMessage(error) }, { status: httpStatus(error) });
+  }
 }

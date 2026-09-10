@@ -8,6 +8,7 @@ type GigCardProps = {
   locationLabel?: string;
   dateLabel?: string;
   imageTone?: "sunset" | "mint" | "night";
+  spotsLabel?: string;
 };
 
 /**
@@ -22,6 +23,7 @@ export function GigCard({
   locationLabel,
   dateLabel,
   imageTone = "sunset",
+  spotsLabel = "8 spots left",
 }: GigCardProps) {
   const volunteer = kindLabel === "Volunteer";
   const tone = {
@@ -61,7 +63,7 @@ export function GigCard({
           <span>Host · {hostName}</span>
         </div>
         <div className="flex items-center justify-between border-t border-black/5 pt-3">
-          <span className="text-xs font-semibold text-purple-gray">8 spots left</span>
+          <span className="text-xs font-semibold text-purple-gray">{spotsLabel}</span>
           <Link href={href} className="flex min-h-10 items-center rounded-full bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple">View gig</Link>
         </div>
       </div>

@@ -2,24 +2,31 @@
 
 import { useMemo, useState } from "react";
 import { GigCard } from "@/components/gig-card";
-import { demoGigs } from "@/lib/gig-data";
+import { useOffer } from "@/components/offer-provider";
+import type { GigListItem } from "@/lib/data/types";
 
 const categories = ["All gigs", "Events", "Community", "Hospitality", "Projects"] as const;
 
-export function DiscoverView() {
+type DiscoverViewProps = {
+  initialGigs: GigListItem[];
+};
+
+export function DiscoverView({ initialGigs }: DiscoverViewProps) {
+  const { user, source } = useOffer();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All gigs");
   const [kind, setKind] = useState<"All" | "Volunteer" | "Paid gig">("All");
-  const filtered = useMemo(() => demoGigs.filter((gig) => {
+  const greetingName = user?.displayName.split(" ")[0] ?? (source === "demo-adapter" ? "Slice" : "");
+  const filtered = useMemo(() => initialGigs.filter((gig) => {
     const haystack = `${gig.title} ${gig.hostName} ${gig.locationLabel} ${gig.category}`.toLowerCase();
     return haystack.includes(query.toLowerCase()) && (category === "All gigs" || gig.category === category) && (kind === "All" || gig.kindLabel === kind);
-  }), [category, kind, query]);
+  }), [category, initialGigs, kind, query]);
   const topical = filtered.filter((gig) => gig.kindLabel === "Volunteer");
   const paid = filtered.filter((gig) => gig.kindLabel === "Paid gig");
 
   return (
     <div className="space-y-8">
-      <header className="flex items-end justify-between gap-4"><div><p className="mb-2 text-sm font-semibold text-purple">Good morning, Slice</p><h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] text-black sm:text-5xl">Find your people.</h1></div><button type="button" aria-label="Notifications" className="grid size-11 shrink-0 place-items-center rounded-full border border-black/5 bg-white text-lg shadow-sm transition-colors hover:bg-black hover:text-white">♧</button></header>
+      <header className="flex items-end justify-between gap-4"><div><p className="mb-2 text-sm font-semibold text-purple">{greetingName ? `Good morning, ${greetingName}` : "Good morning"}</p><h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] text-black sm:text-5xl">Find your people.</h1></div><button type="button" aria-label="Notifications" className="grid size-11 shrink-0 place-items-center rounded-full border border-black/5 bg-white text-lg shadow-sm transition-colors hover:bg-black hover:text-white">♧</button></header>
 
       <div className="flex items-center gap-3"><label className="flex min-h-12 flex-1 items-center gap-3 rounded-full border border-black/5 bg-white px-4 shadow-sm focus-within:border-purple focus-within:ring-4 focus-within:ring-purple/10"><svg className="size-5 shrink-0 text-purple-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg><input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search gigs" placeholder="Search gigs, places or roles" className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-purple-gray/70" /></label><button type="button" aria-label="Filter gigs" className="grid size-12 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg shadow-black/10 transition-colors hover:bg-purple">☷</button></div>
 
