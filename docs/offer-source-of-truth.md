@@ -53,8 +53,7 @@ These stay out of scope (placeholders and types only):
 
 - Identity verification
 - Payments, escrow, wallets
-- Messaging backends
 - QR / check-in implementation
 - Live discover ranking
 
-Auth and Postgres are Supabase when env is set; otherwise a demo adapter. See [`data-layer.md`](./data-layer.md) and [`open-decisions.md`](./open-decisions.md).
+In-app Host↔applicant messaging is implemented (1:1 per gig). Group chat and email/SMS copies are still open. Auth and Postgres are Supabase when env is set; otherwise a demo adapter. See [`data-layer.md`](./data-layer.md) and [`open-decisions.md`](./open-decisions.md).

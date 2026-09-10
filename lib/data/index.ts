@@ -6,9 +6,11 @@ import type {
   ApplyInput,
   CreateGigInput,
   DataSource,
+  EnsureThreadInput,
   GigDetail,
   GigListFilters,
   GigListItem,
+  InboxPayload,
   ListResult,
   MyActivity,
   ProfilePatch,
@@ -16,7 +18,20 @@ import type {
   UserApplication,
 } from "@/lib/data/types";
 
-export type { DataSource, GigDetail, GigListItem, MyActivity, ProfilePatch, SessionProfile } from "@/lib/data/types";
+export type {
+  ChatMessage,
+  DataSource,
+  EnsureThreadInput,
+  GigDetail,
+  GigListItem,
+  InboxPayload,
+  InboxThread,
+  MyActivity,
+  ProfilePatch,
+  SessionProfile,
+  StartableThread,
+  ThreadMessagesPayload,
+} from "@/lib/data/types";
 
 export function dataSource(): DataSource {
   return isSupabaseConfigured() ? "supabase" : "demo-adapter";
@@ -74,6 +89,35 @@ export async function reviewApplication(id: string, status: "accepted" | "declin
     return { ...(await supabase.reviewApplication(id, status)), source: "supabase" as const, persisted: true };
   }
   return { ...demo.reviewApplication(id, status as "accepted" | "declined"), source: "demo-adapter" as const, persisted: false };
+}
+
+export async function listInbox(): Promise<{ data: InboxPayload; source: DataSource }> {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.listInbox(), source: "supabase" };
+  }
+  return { data: demo.listInbox(), source: "demo-adapter" };
+}
+
+export async function listThreadMessages(threadId: string) {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.listThreadMessages(threadId), source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.listThreadMessages(threadId), source: "demo-adapter" as const, persisted: false };
+}
+
+export async function sendThreadMessage(threadId: string, body: string) {
+  if (isSupabaseConfigured()) {
+    return { data: await supabase.sendThreadMessage(threadId, body), source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.sendThreadMessage(threadId, body), source: "demo-adapter" as const, persisted: false };
+}
+
+export async function ensureThread(input: EnsureThreadInput) {
+  if (isSupabaseConfigured()) {
+    const result = await supabase.ensureThread(input);
+    return { data: result.thread, created: result.created, source: "supabase" as const, persisted: true };
+  }
+  return { data: demo.ensureThread(input), created: false, source: "demo-adapter" as const, persisted: false };
 }
 
 export function httpStatus(error: unknown, fallback = 500) {

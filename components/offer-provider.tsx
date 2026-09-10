@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import type { DataSource, ProfilePatch, SessionProfile, UserApplication } from "@/lib/data/types";
+import type { DataSource, EnsureThreadInput, InboxThread, ProfilePatch, SessionProfile, UserApplication } from "@/lib/data/types";
+import { rememberDemoThread } from "@/lib/data/demo-message-store";
 
 export type LocalApplication = {
   id?: string;
@@ -19,6 +20,7 @@ type OfferContextValue = {
   applications: LocalApplication[];
   applyToGig: (gigSlug: string, role: string, note?: string) => Promise<{ ok: boolean; status?: number; error?: string }>;
   reviewApplication: (id: string, status: "accepted" | "declined") => Promise<{ ok: boolean; status?: number; error?: string }>;
+  ensureThread: (input: EnsureThreadInput) => Promise<{ ok: boolean; thread?: InboxThread; status?: number; error?: string }>;
   updateProfile: (input: ProfilePatch) => Promise<{ ok: boolean; status?: number; error?: string }>;
   hasApplied: (gigSlug: string) => boolean;
   refresh: () => Promise<void>;
@@ -131,6 +133,20 @@ export function OfferProvider({ children }: { children: ReactNode }) {
     return { ok: true, status: response.status };
   }, []);
 
+  const ensureThread = useCallback(async (input: EnsureThreadInput) => {
+    const response = await fetch("/api/threads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await response.json()) as { data?: InboxThread; error?: string };
+    if (!response.ok) {
+      return { ok: false, status: response.status, error: body.error ?? "Could not open conversation." };
+    }
+    if (source === "demo-adapter" && body.data) rememberDemoThread(body.data);
+    return { ok: true, thread: body.data, status: response.status };
+  }, [source]);
+
   const updateProfile = useCallback(async (input: ProfilePatch) => {
     const response = await fetch("/api/me", {
       method: "PATCH",
@@ -153,11 +169,12 @@ export function OfferProvider({ children }: { children: ReactNode }) {
       applications,
       applyToGig,
       reviewApplication,
+      ensureThread,
       updateProfile,
       hasApplied: (gigSlug: string) => applications.some((application) => application.gigSlug === gigSlug),
       refresh,
     }),
-    [applications, applyToGig, ready, refresh, reviewApplication, source, updateProfile, user],
+    [applications, applyToGig, ensureThread, ready, refresh, reviewApplication, source, updateProfile, user],
   );
 
   return <OfferContext.Provider value={value}>{children}</OfferContext.Provider>;

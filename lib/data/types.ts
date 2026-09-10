@@ -54,8 +54,10 @@ export type ProfilePatch = {
 
 export type UserApplication = {
   id: string;
+  gigId: string;
   gigSlug: string;
   gigTitle: string;
+  hostUserId?: string;
   role: string;
   status: ApplicationUiStatus;
   rawStatus: ApplicationStatus;
@@ -67,12 +69,64 @@ export type HostApplicant = {
   id: string;
   gigSlug: string;
   gigTitle: string;
+  applicantUserId: string;
   name: string;
   initials: string;
   role: string;
   trust: string;
   tone: string;
   status: ApplicationStatus;
+};
+
+export type InboxThread = {
+  id: string;
+  gigId: string;
+  gigSlug: string;
+  gigTitle: string;
+  counterpartName: string;
+  counterpartInitials: string;
+  counterpartUserId: string;
+  preview: string;
+  lastMessageAt: string;
+  timeLabel: string;
+  unread: number;
+  online: boolean;
+  tone: string;
+  role: "host" | "participant";
+};
+
+export type StartableThread = {
+  applicationId: string;
+  gigSlug: string;
+  gigTitle: string;
+  counterpartName: string;
+  counterpartInitials: string;
+  role: string;
+  tone: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  threadId: string;
+  senderUserId: string;
+  body: string;
+  createdAt: string;
+  mine: boolean;
+};
+
+export type InboxPayload = {
+  threads: InboxThread[];
+  startable: StartableThread[];
+};
+
+export type ThreadMessagesPayload = {
+  thread: InboxThread;
+  messages: ChatMessage[];
+};
+
+export type EnsureThreadInput = {
+  applicationId?: string;
+  gigSlug?: string;
 };
 
 export type MyGigCard = GigListItem & {

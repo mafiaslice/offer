@@ -3,30 +3,40 @@ import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import {
   applicationUiStatus,
+  avatarTone,
   combineDateAndTime,
   coverToneFor,
   formatDateLabel,
   formatLongDateLabel,
+  formatThreadTime,
   gigLifecycleStatus,
   initialsFromName,
   kindLabel,
+  MAX_MESSAGE_LENGTH,
   normalizeCategory,
   parseKindFilter,
   slugify,
   spotsLabel,
+  threadUnread,
 } from "@/lib/data/format";
 import type {
   ApplyInput,
+  ChatMessage,
   CreateGigInput,
+  EnsureThreadInput,
   GigDetail,
   GigListFilters,
   GigListItem,
   HostApplicant,
+  InboxPayload,
+  InboxThread,
   ListResult,
   MyActivity,
   MyGigCard,
   ProfilePatch,
   SessionProfile,
+  StartableThread,
+  ThreadMessagesPayload,
   UserApplication,
 } from "@/lib/data/types";
 
@@ -279,7 +289,7 @@ export async function createGig(input: CreateGigInput): Promise<GigDetail> {
 
 export async function applyToGig(input: ApplyInput): Promise<UserApplication> {
   const { supabase, user } = await requireUser();
-  const { data: gig, error: gigError } = await supabase.from("gigs").select("id, slug, title").eq("slug", input.gigSlug).maybeSingle();
+  const { data: gig, error: gigError } = await supabase.from("gigs").select("id, slug, title, host_user_id").eq("slug", input.gigSlug).maybeSingle();
   if (gigError || !gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
 
   const { data: role } = await supabase
@@ -299,8 +309,10 @@ export async function applyToGig(input: ApplyInput): Promise<UserApplication> {
   if (existing) {
     return {
       id: existing.id,
+      gigId: gig.id,
       gigSlug: gig.slug,
       gigTitle: gig.title,
+      hostUserId: gig.host_user_id,
       role: input.roleTitle,
       status: applicationUiStatus(existing.status),
       rawStatus: existing.status,
@@ -325,8 +337,10 @@ export async function applyToGig(input: ApplyInput): Promise<UserApplication> {
 
   return {
     id: application.id,
+    gigId: gig.id,
     gigSlug: gig.slug,
     gigTitle: gig.title,
+    hostUserId: gig.host_user_id,
     role: input.roleTitle,
     status: applicationUiStatus(application.status),
     rawStatus: application.status,
@@ -428,8 +442,10 @@ export async function listMyActivity(): Promise<MyActivity> {
     return [
       {
         id: row.id,
+        gigId: gig.id,
         gigSlug: gig.slug,
         gigTitle: gig.title,
+        hostUserId: gig.host_user_id,
         role: (row.role_id && roleById.get(row.role_id)) || "General support",
         status: applicationUiStatus(row.status),
         rawStatus: row.status,
@@ -460,6 +476,7 @@ export async function listMyActivity(): Promise<MyActivity> {
       id: row.id,
       gigSlug: gig?.slug ?? "",
       gigTitle: gig?.title ?? "Gig",
+      applicantUserId: row.applicant_user_id,
       name,
       initials: initialsFromName(name),
       role: (row.role_id && roleById.get(row.role_id)) || "General support",
@@ -470,4 +487,271 @@ export async function listMyActivity(): Promise<MyActivity> {
   });
 
   return { hosted, joined, applications, reviewQueue };
+}
+
+type ThreadEmbed = Database["public"]["Tables"]["message_threads"]["Row"] & {
+  gigs: { id: string; slug: string; title: string } | { id: string; slug: string; title: string }[] | null;
+  host: { id: string; display_name: string } | { id: string; display_name: string }[] | null;
+  participant: { id: string; display_name: string } | { id: string; display_name: string }[] | null;
+};
+
+const THREAD_SELECT =
+  "id, gig_id, host_user_id, participant_user_id, created_at, last_message_at, last_message_preview, last_message_sender_id, host_last_read_at, participant_last_read_at, gigs!message_threads_gig_id_fkey ( id, slug, title ), host:profiles!message_threads_host_user_id_fkey ( id, display_name ), participant:profiles!message_threads_participant_user_id_fkey ( id, display_name )";
+
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
+function toInboxThread(row: ThreadEmbed, viewerId: string): InboxThread {
+  const gig = one(row.gigs);
+  const host = one(row.host);
+  const participant = one(row.participant);
+  const viewerIsHost = row.host_user_id === viewerId;
+  const counterpart = viewerIsHost ? participant : host;
+  const name = counterpart?.display_name?.trim() || (viewerIsHost ? "Applicant" : "Host");
+  return {
+    id: row.id,
+    gigId: row.gig_id,
+    gigSlug: gig?.slug ?? "",
+    gigTitle: gig?.title ?? "Gig",
+    counterpartName: name,
+    counterpartInitials: initialsFromName(name),
+    counterpartUserId: viewerIsHost ? row.participant_user_id : row.host_user_id,
+    preview: row.last_message_preview || "No messages yet",
+    lastMessageAt: row.last_message_at,
+    timeLabel: formatThreadTime(row.last_message_at),
+    unread: threadUnread({
+      viewerId,
+      hostUserId: row.host_user_id,
+      lastMessageSenderId: row.last_message_sender_id,
+      lastMessageAt: row.last_message_at,
+      hostLastReadAt: row.host_last_read_at,
+      participantLastReadAt: row.participant_last_read_at,
+    }),
+    online: false,
+    tone: avatarTone(name),
+    role: viewerIsHost ? "host" : "participant",
+  };
+}
+
+async function loadThreadById(supabase: Awaited<ReturnType<typeof createClient>>, threadId: string, userId: string) {
+  const { data, error } = await supabase.from("message_threads").select(THREAD_SELECT).eq("id", threadId).maybeSingle();
+  if (error || !data) throw Object.assign(new Error("Conversation not found."), { status: 404 });
+  return toInboxThread(data as ThreadEmbed, userId);
+}
+
+async function upsertThread(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  gigId: string,
+  hostUserId: string,
+  participantUserId: string,
+  userId: string,
+): Promise<{ thread: InboxThread; created: boolean }> {
+  const { data: existing } = await supabase
+    .from("message_threads")
+    .select("id")
+    .eq("gig_id", gigId)
+    .eq("host_user_id", hostUserId)
+    .eq("participant_user_id", participantUserId)
+    .maybeSingle();
+  if (existing) {
+    return { thread: await loadThreadById(supabase, existing.id, userId), created: false };
+  }
+
+  const { data: inserted, error } = await supabase
+    .from("message_threads")
+    .insert({ gig_id: gigId, host_user_id: hostUserId, participant_user_id: participantUserId })
+    .select("id")
+    .single();
+
+  if (error || !inserted) {
+    const { data: raced } = await supabase
+      .from("message_threads")
+      .select("id")
+      .eq("gig_id", gigId)
+      .eq("host_user_id", hostUserId)
+      .eq("participant_user_id", participantUserId)
+      .maybeSingle();
+    if (raced) return { thread: await loadThreadById(supabase, raced.id, userId), created: false };
+    throw Object.assign(new Error(error?.message ?? "Could not open conversation."), { status: 400 });
+  }
+
+  return { thread: await loadThreadById(supabase, inserted.id, userId), created: true };
+}
+
+async function listStartable(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  rows: ThreadEmbed[],
+): Promise<StartableThread[]> {
+  const existing = new Set(rows.map((row) => `${row.gig_id}:${row.participant_user_id}`));
+  const [{ data: hostedGigs }, { data: myApps }] = await Promise.all([
+    supabase.from("gigs").select("id, slug, title").eq("host_user_id", userId),
+    supabase.from("applications").select("id, gig_id, role_id, status").eq("applicant_user_id", userId).neq("status", "withdrawn"),
+  ]);
+
+  const hosted = hostedGigs ?? [];
+  const hostedIds = hosted.map((gig) => gig.id);
+  const { data: incoming } = hostedIds.length
+    ? await supabase.from("applications").select("id, gig_id, applicant_user_id, role_id, status").in("gig_id", hostedIds).neq("status", "withdrawn")
+    : { data: [] as { id: string; gig_id: string; applicant_user_id: string; role_id: string | null; status: string }[] };
+
+  const outgoingGigIds = [...new Set((myApps ?? []).map((row) => row.gig_id))];
+  const allGigIds = [...new Set([...hostedIds, ...outgoingGigIds])];
+  const applicantIds = [...new Set((incoming ?? []).map((row) => row.applicant_user_id))];
+  const roleIds = [...new Set([...(incoming ?? []), ...(myApps ?? [])].map((row) => row.role_id).filter((id): id is string => Boolean(id)))];
+
+  const [{ data: relatedGigs }, { data: applicantProfiles }, { data: roles }] = await Promise.all([
+    allGigIds.length ? supabase.from("gigs").select("id, slug, title, host_user_id").in("id", allGigIds) : Promise.resolve({ data: [] as never[] }),
+    applicantIds.length ? supabase.from("profiles").select("id, display_name").in("id", applicantIds) : Promise.resolve({ data: [] as never[] }),
+    roleIds.length ? supabase.from("gig_roles").select("id, title").in("id", roleIds) : Promise.resolve({ data: [] as never[] }),
+  ]);
+
+  const gigById = new Map((relatedGigs ?? []).map((gig) => [gig.id, gig]));
+  const nameById = new Map((applicantProfiles ?? []).map((row) => [row.id, row.display_name]));
+  const roleById = new Map((roles ?? []).map((role) => [role.id, role.title]));
+  const hostIds = [...new Set((relatedGigs ?? []).map((gig) => gig.host_user_id).filter((id) => id !== userId))];
+  const { data: hostProfiles } = hostIds.length
+    ? await supabase.from("profiles").select("id, display_name").in("id", hostIds)
+    : { data: [] };
+  const hostNameById = new Map((hostProfiles ?? []).map((row) => [row.id, row.display_name]));
+
+  const startable: StartableThread[] = [];
+
+  for (const row of incoming ?? []) {
+    if (existing.has(`${row.gig_id}:${row.applicant_user_id}`)) continue;
+    const gig = gigById.get(row.gig_id);
+    const name = nameById.get(row.applicant_user_id)?.trim() || "Applicant";
+    startable.push({
+      applicationId: row.id,
+      gigSlug: gig?.slug ?? "",
+      gigTitle: gig?.title ?? "Gig",
+      counterpartName: name,
+      counterpartInitials: initialsFromName(name),
+      role: (row.role_id && roleById.get(row.role_id)) || "General support",
+      tone: avatarTone(name),
+    });
+  }
+
+  for (const row of myApps ?? []) {
+    if (existing.has(`${row.gig_id}:${userId}`)) continue;
+    const gig = gigById.get(row.gig_id);
+    if (!gig || gig.host_user_id === userId) continue;
+    const name = hostNameById.get(gig.host_user_id)?.trim() || "Host";
+    startable.push({
+      applicationId: row.id,
+      gigSlug: gig.slug,
+      gigTitle: gig.title,
+      counterpartName: name,
+      counterpartInitials: initialsFromName(name),
+      role: (row.role_id && roleById.get(row.role_id)) || "General support",
+      tone: avatarTone(name),
+    });
+  }
+
+  return startable;
+}
+
+export async function listInbox(): Promise<InboxPayload> {
+  const { supabase, user } = await requireUser();
+  const { data, error } = await supabase.from("message_threads").select(THREAD_SELECT).order("last_message_at", { ascending: false });
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
+  const rows = (data ?? []) as ThreadEmbed[];
+  const threads = rows.map((row) => toInboxThread(row, user.id));
+  return { threads, startable: await listStartable(supabase, user.id, rows) };
+}
+
+export async function listThreadMessages(threadId: string): Promise<ThreadMessagesPayload> {
+  const { supabase, user } = await requireUser();
+  const thread = await loadThreadById(supabase, threadId, user.id);
+  const { data, error } = await supabase
+    .from("messages")
+    .select("id, thread_id, sender_user_id, body, created_at")
+    .eq("thread_id", threadId)
+    .order("created_at", { ascending: true })
+    .limit(200);
+  if (error) throw Object.assign(new Error(error.message), { status: 500 });
+
+  const readAt = new Date().toISOString();
+  await supabase
+    .from("message_threads")
+    .update(thread.role === "host" ? { host_last_read_at: readAt } : { participant_last_read_at: readAt })
+    .eq("id", threadId);
+
+  const messages: ChatMessage[] = (data ?? []).map((row) => ({
+    id: row.id,
+    threadId: row.thread_id,
+    senderUserId: row.sender_user_id,
+    body: row.body,
+    createdAt: row.created_at,
+    mine: row.sender_user_id === user.id,
+  }));
+
+  return { thread: { ...thread, unread: 0 }, messages };
+}
+
+export async function sendThreadMessage(threadId: string, body: string): Promise<ChatMessage> {
+  const { supabase, user } = await requireUser();
+  const trimmed = body.trim();
+  if (!trimmed) throw Object.assign(new Error("Message cannot be empty."), { status: 400 });
+  if (trimmed.length > MAX_MESSAGE_LENGTH) throw Object.assign(new Error("Message is too long."), { status: 400 });
+  await loadThreadById(supabase, threadId, user.id);
+
+  const { data, error } = await supabase
+    .from("messages")
+    .insert({ thread_id: threadId, sender_user_id: user.id, body: trimmed })
+    .select("id, thread_id, sender_user_id, body, created_at")
+    .single();
+  if (error || !data) throw Object.assign(new Error(error?.message ?? "Could not send message."), { status: 400 });
+
+  return {
+    id: data.id,
+    threadId: data.thread_id,
+    senderUserId: data.sender_user_id,
+    body: data.body,
+    createdAt: data.created_at,
+    mine: true,
+  };
+}
+
+export async function ensureThread(input: EnsureThreadInput): Promise<{ thread: InboxThread; created: boolean }> {
+  const { supabase, user } = await requireUser();
+
+  if (input.applicationId?.trim()) {
+    const { data: application } = await supabase
+      .from("applications")
+      .select("id, applicant_user_id, gig_id, status")
+      .eq("id", input.applicationId.trim())
+      .maybeSingle();
+    if (!application || application.status === "withdrawn") {
+      throw Object.assign(new Error("Application not found."), { status: 404 });
+    }
+    const { data: gig } = await supabase.from("gigs").select("id, host_user_id").eq("id", application.gig_id).maybeSingle();
+    if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
+    if (gig.host_user_id !== user.id && application.applicant_user_id !== user.id) {
+      throw Object.assign(new Error("You can only message on your own applications."), { status: 403 });
+    }
+    return upsertThread(supabase, gig.id, gig.host_user_id, application.applicant_user_id, user.id);
+  }
+
+  if (input.gigSlug?.trim()) {
+    const { data: gig } = await supabase.from("gigs").select("id, slug, host_user_id").eq("slug", input.gigSlug.trim()).maybeSingle();
+    if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
+    if (gig.host_user_id === user.id) {
+      throw Object.assign(new Error("Hosts start a conversation from an application."), { status: 400 });
+    }
+    const { data: application } = await supabase
+      .from("applications")
+      .select("id, status")
+      .eq("gig_id", gig.id)
+      .eq("applicant_user_id", user.id)
+      .maybeSingle();
+    if (!application || application.status === "withdrawn") {
+      throw Object.assign(new Error("Apply to this gig before messaging the host."), { status: 403 });
+    }
+    return upsertThread(supabase, gig.id, gig.host_user_id, user.id, user.id);
+  }
+
+  throw Object.assign(new Error("Choose a gig or application to message."), { status: 400 });
 }

@@ -7,7 +7,7 @@ The app uses an adapter so CI and local `npm run build` work without credentials
 | `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set | `supabase` | Auth cookies + Postgres via RLS |
 | Either public env var is missing | `demo-adapter` | In-repo fixtures; writes are not durable |
 
-Reads go through `lib/data`. Writes (create gig, apply, host accept/decline) go through the same adapters and the App Router APIs:
+Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, messages) go through the same adapters and the App Router APIs:
 
 - `GET /api/gigs` — `q`, `category`, `kind`
 - `GET /api/gigs/[slug]`
@@ -16,13 +16,17 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline) go 
 - `PATCH /api/applications/[id]` — `accepted` \| `declined` \| `withdrawn`
 - `GET /api/my-gigs`
 - `GET` / `PATCH /api/me` — session profile; GET creates a profiles row if the signed-in user is missing one; PATCH merges fields
+- `GET /api/threads` — inbox + people you can start a 1:1 thread with (auth required when Supabase is configured)
+- `POST /api/threads` — `{ applicationId }` or `{ gigSlug }`; opens or returns the Host↔applicant thread (does not auto-create on apply/accept)
+- `GET /api/threads/[id]/messages` — messages in a thread; marks the viewer’s side read
+- `POST /api/threads/[id]/messages` — `{ body }` send a message
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state so the UI works in CI. `/post` redirects unsigned users to `/auth?next=/post`. Host accept/decline on My Gigs does the same on 401.
+When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. `/post` redirects unsigned users to `/auth?next=/post`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
 
 ## Local with Supabase
 
 1. Create a Supabase project.
-2. Run the SQL in `supabase/migrations/20260910000001_init_offer_schema.sql` (SQL editor or `supabase db push`).
+2. Run the SQL in `supabase/migrations/` (both `20260910000001_init_offer_schema.sql` and `20260910000002_message_threads.sql`) in the SQL editor or via `supabase db push`.
 3. Auth → Providers → **Email** on. Enable email OTP / magic links. Confirm email can be off for local testing.
 4. Auth → URL configuration:
    - Site URL: `http://localhost:3000`
@@ -54,3 +58,5 @@ Phone SMS needs Twilio on the project. Keep `NEXT_PUBLIC_SUPABASE_SMS_AUTH` unse
 - Application statuses in the database: `pending`, `accepted`, `declined`, `withdrawn`.
 - Cover photos are not uploaded in this slice; UI keeps the gradient `cover_tone`.
 - No payment provider. Paid gigs store incentive text only.
+- v1 messaging is **one 1:1 thread per** `(gig_id, host_user_id, participant_user_id)`. Participants read/write their thread; hosts also see threads on their gigs. Apply/accept does not insert a thread until someone opens the conversation.
+- Unread is a last-inbound badge (not a full count). Online/presence is demo-only.
