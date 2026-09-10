@@ -33,8 +33,12 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 ## Communication
 
-- Message threads: Host↔applicant, Host↔all participants, or something else.
-- What is in-app vs email/SMS. No messaging backend in this scaffold.
+- **Decided (v1):** one 1:1 Host↔applicant thread per `(gig_id, host_user_id, participant_user_id)`. Group chat / Host↔all participants is still open.
+- **Decided (v1):** threads are created when someone opens a conversation from Messages, My Gigs, or after applying. Apply and accept do not auto-insert a thread.
+- **Decided (v1):** messaging is allowed while an application exists and is not withdrawn (including pending).
+- What is copied out-of-app (email vs SMS). No SMS. Email is auth-only in this slice.
+- Message edit/delete, attachments, read receipts beyond a last-read timestamp, and moderation reporting.
+- Online/presence is demo-only; live presence is unset.
 
 ## Showing up
 

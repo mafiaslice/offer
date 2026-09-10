@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
-import type { HostApplicant, MyGigCard } from "@/lib/data/types";
+import type { EnsureThreadInput, HostApplicant, MyGigCard } from "@/lib/data/types";
 
 type GigStatus = "Upcoming" | "Completed";
 type GigMode = "Joined" | "Hosted";
@@ -22,21 +22,28 @@ function Stat({ value, label }: { value: string; label: string }) {
   return <div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">{value}</p><p className="mt-1 text-xs font-semibold text-purple-gray">{label}</p></div>;
 }
 
-function MyGigCardView({ gig, applicationStatus }: { gig: MyGigCard; applicationStatus?: "Applied" | "Accepted" | "Declined" }) {
+function MyGigCardView({ gig, applicationStatus, onMessage }: { gig: MyGigCard; applicationStatus?: "Applied" | "Accepted" | "Declined"; onMessage?: () => void }) {
   return (
-    <Link href={`/gigs/${gig.slug}`} className="group flex gap-3 rounded-[1.5rem] bg-white p-3 shadow-[0_12px_28px_rgba(53,32,79,0.07)] transition-transform hover:-translate-y-0.5 sm:gap-4 sm:p-4">
-      <div className={`relative h-28 w-28 shrink-0 rounded-2xl bg-gradient-to-br ${toneClass(gig.imageTone)} sm:h-32 sm:w-32`}><span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-bold text-black">{gig.kindLabel}</span></div>
-      <div className="min-w-0 flex-1 py-1">
-        <div className="flex items-start justify-between gap-2"><h2 className="line-clamp-2 text-base font-bold leading-tight tracking-[-0.03em] sm:text-lg">{gig.title}</h2><span className="text-lg text-purple">↗</span></div>
-        <p className="mt-2 text-xs font-semibold text-purple-gray">{gig.mode} · {gig.hostName}</p>
-        <p className="mt-1 text-xs text-purple-gray">{gig.dateLabel} · {gig.locationLabel}</p>
-        <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${applicationStatus ? "bg-purple/10 text-purple" : gig.status === "Upcoming" ? "bg-purple/10 text-purple" : "bg-success/15 text-[#37951a]"}`}>{applicationStatus ?? gig.status}</span>
-      </div>
-    </Link>
+    <article className="rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">
+      <Link href={`/gigs/${gig.slug}`} className="group flex gap-3 p-3 transition-transform hover:-translate-y-0.5 sm:gap-4 sm:p-4">
+        <div className={`relative h-28 w-28 shrink-0 rounded-2xl bg-gradient-to-br ${toneClass(gig.imageTone)} sm:h-32 sm:w-32`}><span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-bold text-black">{gig.kindLabel}</span></div>
+        <div className="min-w-0 flex-1 py-1">
+          <div className="flex items-start justify-between gap-2"><h2 className="line-clamp-2 text-base font-bold leading-tight tracking-[-0.03em] sm:text-lg">{gig.title}</h2><span className="text-lg text-purple">↗</span></div>
+          <p className="mt-2 text-xs font-semibold text-purple-gray">{gig.mode} · {gig.hostName}</p>
+          <p className="mt-1 text-xs text-purple-gray">{gig.dateLabel} · {gig.locationLabel}</p>
+          <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${applicationStatus ? "bg-purple/10 text-purple" : gig.status === "Upcoming" ? "bg-purple/10 text-purple" : "bg-success/15 text-[#37951a]"}`}>{applicationStatus ?? gig.status}</span>
+        </div>
+      </Link>
+      {onMessage ? (
+        <div className="border-t border-black/5 px-4 py-3">
+          <button type="button" onClick={onMessage} className="text-sm font-bold text-purple">Message host</button>
+        </div>
+      ) : null}
+    </article>
   );
 }
 
-function ApplicationReview({ applicants, onDecide }: { applicants: HostApplicant[]; onDecide: (id: string, status: "accepted" | "declined") => Promise<boolean> }) {
+function ApplicationReview({ applicants, onDecide, onMessage }: { applicants: HostApplicant[]; onDecide: (id: string, status: "accepted" | "declined") => Promise<boolean>; onMessage: (applicationId: string) => void }) {
   const [decisions, setDecisions] = useState<Record<string, "Accepted" | "Declined">>({});
   const title = applicants[0]?.gigTitle ?? "Your gig";
 
@@ -68,11 +75,12 @@ function ApplicationReview({ applicants, onDecide }: { applicants: HostApplicant
                   <button type="button" onClick={() => { void onDecide(applicant.id, "accepted").then((ok) => { if (ok) setDecisions((current) => ({ ...current, [applicant.id]: "Accepted" })); }); }} className="min-h-10 rounded-xl bg-black text-xs font-bold text-white transition-colors hover:bg-purple">Accept</button>
                 </div>
               ) : null}
+              <button type="button" onClick={() => onMessage(applicant.id)} className="mt-2 text-xs font-bold text-purple">Message applicant</button>
             </div>
           );
         })}
       </div>
-      <p className="text-xs leading-5 text-purple-gray">Applicant decisions notify people and reserve their selected role once messaging is connected.</p>
+      <p className="text-xs leading-5 text-purple-gray">Accepting reserves the role. Message from here when you want a 1:1 thread — Offer does not auto-start chats.</p>
     </section>
   );
 }
@@ -87,7 +95,7 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
   const [status, setStatus] = useState<GigStatus>("Upcoming");
   const [mode, setMode] = useState<"All" | GigMode>("All");
   const router = useRouter();
-  const { applications, reviewApplication, source, user, ready } = useOffer();
+  const { applications, reviewApplication, ensureThread, source, user, ready } = useOffer();
   const gigs = useMemo(() => [...joined, ...hosted], [hosted, joined]);
   const applicationBySlug = useMemo(() => new Map(applications.map((application) => [application.gigSlug, application.status])), [applications]);
   const filtered = useMemo(() => gigs.filter((gig) => gig.status === status && (mode === "All" || gig.mode === mode)), [gigs, mode, status]);
@@ -95,6 +103,19 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
   const joinedCount = source === "demo-adapter" ? 3 + extraJoined : joined.length;
   const hostedCount = source === "demo-adapter" ? 1 : hosted.length;
   const peopleMet = source === "demo-adapter" ? "12" : "—";
+
+  async function openThread(input: EnsureThreadInput) {
+    if (source === "supabase" && ready && !user) {
+      router.push(signInHref("/my-gigs"));
+      return;
+    }
+    const result = await ensureThread(input);
+    if (!result.ok || !result.thread) {
+      if (result.status === 401) router.push(signInHref("/my-gigs"));
+      return;
+    }
+    router.push(`/messages?thread=${result.thread.id}`);
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-7">
@@ -106,8 +127,8 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
 
       <div className="flex items-center justify-between"><div className="flex gap-5 border-b border-black/10"><button type="button" onClick={() => setStatus("Upcoming")} className={`relative pb-3 text-sm font-bold ${status === "Upcoming" ? "text-black" : "text-purple-gray"}`}>Upcoming{status === "Upcoming" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button><button type="button" onClick={() => setStatus("Completed")} className={`relative pb-3 text-sm font-bold ${status === "Completed" ? "text-black" : "text-purple-gray"}`}>Past{status === "Completed" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button></div><Link href="/post" className="text-sm font-bold text-purple">+ Post</Link></div>
 
-      <div className="space-y-3">{filtered.length > 0 ? filtered.map((gig) => <MyGigCardView key={`${gig.mode}-${gig.id}-${gig.title}`} gig={gig} applicationStatus={applicationBySlug.get(gig.slug) ?? gig.applicationStatus} />) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
-      {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onDecide={async (id, nextStatus) => {
+      <div className="space-y-3">{filtered.length > 0 ? filtered.map((gig) => <MyGigCardView key={`${gig.mode}-${gig.id}-${gig.title}`} gig={gig} applicationStatus={applicationBySlug.get(gig.slug) ?? gig.applicationStatus} onMessage={gig.mode === "Joined" ? () => { void openThread({ gigSlug: gig.slug }); } : undefined} />) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
+      {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onMessage={(applicationId) => { void openThread({ applicationId }); }} onDecide={async (id, nextStatus) => {
         if (source === "supabase" && ready && !user) {
           router.push(signInHref("/my-gigs"));
           return false;

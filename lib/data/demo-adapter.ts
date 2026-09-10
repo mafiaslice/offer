@@ -1,17 +1,23 @@
-import { demoGigDetails, demoMyGigs, demoReviewQueue, toListItem } from "@/lib/data/demo-catalog";
-import { applicationUiStatus, slugify } from "@/lib/data/format";
+import { demoChatMessages, demoGigDetails, demoInboxThreads, demoMyGigs, demoReviewQueue, demoStartable, toListItem } from "@/lib/data/demo-catalog";
+import { applicationUiStatus, avatarTone, formatThreadTime, MAX_MESSAGE_LENGTH, slugify } from "@/lib/data/format";
 import type {
   ApplyInput,
+  ChatMessage,
   CreateGigInput,
+  EnsureThreadInput,
   GigDetail,
   GigListFilters,
+  InboxPayload,
+  InboxThread,
   ListResult,
   MyActivity,
   SessionProfile,
+  ThreadMessagesPayload,
   UserApplication,
 } from "@/lib/data/types";
 
 const source = "demo-adapter" as const;
+const DEMO_USER_ID = "demo-user";
 
 function matchesFilters(gig: GigDetail, filters: GigListFilters = {}) {
   const query = filters.query?.trim().toLowerCase() ?? "";
@@ -72,10 +78,13 @@ export function createGig(input: CreateGigInput): GigDetail {
 }
 
 export function applyToGig(input: ApplyInput): UserApplication {
+  const gig = getGigBySlug(input.gigSlug);
   return {
     id: `demo-app-${input.gigSlug}`,
+    gigId: gig?.id ?? `demo-${input.gigSlug}`,
     gigSlug: input.gigSlug,
-    gigTitle: getGigBySlug(input.gigSlug)?.title ?? input.gigSlug,
+    gigTitle: gig?.title ?? input.gigSlug,
+    hostUserId: gig?.hostUserId,
     role: input.roleTitle,
     status: applicationUiStatus("pending"),
     rawStatus: "pending",
@@ -87,4 +96,83 @@ export function applyToGig(input: ApplyInput): UserApplication {
 export function reviewApplication(id: string, status: "accepted" | "declined") {
   const applicant = demoReviewQueue.find((item) => item.id === id);
   return { id, status, gigSlug: applicant?.gigSlug ?? "" };
+}
+
+export function listInbox(): InboxPayload {
+  return { threads: demoInboxThreads, startable: demoStartable };
+}
+
+export function listThreadMessages(threadId: string): ThreadMessagesPayload {
+  const thread = demoInboxThreads.find((item) => item.id === threadId);
+  if (!thread) throw Object.assign(new Error("Conversation not found."), { status: 404 });
+  return { thread, messages: demoChatMessages[threadId] ?? [] };
+}
+
+export function sendThreadMessage(threadId: string, body: string): ChatMessage {
+  const trimmed = body.trim();
+  if (!trimmed) throw Object.assign(new Error("Message cannot be empty."), { status: 400 });
+  if (trimmed.length > MAX_MESSAGE_LENGTH) {
+    throw Object.assign(new Error("Message is too long."), { status: 400 });
+  }
+  const known = demoInboxThreads.some((item) => item.id === threadId) || threadId.startsWith("demo-thread-");
+  if (!known) throw Object.assign(new Error("Conversation not found."), { status: 404 });
+  return {
+    id: `demo-msg-${Date.now()}`,
+    threadId,
+    senderUserId: DEMO_USER_ID,
+    body: trimmed,
+    createdAt: new Date().toISOString(),
+    mine: true,
+  };
+}
+
+export function ensureThread(input: EnsureThreadInput): InboxThread {
+  if (input.applicationId) {
+    const applicant = demoReviewQueue.find((item) => item.id === input.applicationId);
+    if (!applicant) throw Object.assign(new Error("Application not found."), { status: 404 });
+    const existing = demoInboxThreads.find((thread) => thread.counterpartUserId === applicant.applicantUserId);
+    if (existing) return existing;
+    const gig = getGigBySlug(applicant.gigSlug);
+    return {
+      id: `demo-thread-${applicant.id}`,
+      gigId: gig?.id ?? `demo-${applicant.gigSlug}`,
+      gigSlug: applicant.gigSlug,
+      gigTitle: applicant.gigTitle,
+      counterpartName: applicant.name,
+      counterpartInitials: applicant.initials,
+      counterpartUserId: applicant.applicantUserId,
+      preview: "",
+      lastMessageAt: new Date().toISOString(),
+      timeLabel: formatThreadTime(new Date().toISOString()),
+      unread: 0,
+      online: false,
+      tone: applicant.tone,
+      role: "host",
+    };
+  }
+
+  if (input.gigSlug) {
+    const existing = demoInboxThreads.find((thread) => thread.gigSlug === input.gigSlug && thread.role === "participant");
+    if (existing) return existing;
+    const gig = getGigBySlug(input.gigSlug);
+    if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
+    return {
+      id: `demo-thread-${gig.slug}`,
+      gigId: gig.id,
+      gigSlug: gig.slug,
+      gigTitle: gig.title,
+      counterpartName: gig.hostName,
+      counterpartInitials: gig.hostInitials,
+      counterpartUserId: gig.hostUserId ?? `demo-host-${gig.slug}`,
+      preview: "",
+      lastMessageAt: new Date().toISOString(),
+      timeLabel: formatThreadTime(new Date().toISOString()),
+      unread: 0,
+      online: false,
+      tone: avatarTone(gig.hostName),
+      role: "participant",
+    };
+  }
+
+  throw Object.assign(new Error("Choose a gig or application to message."), { status: 400 });
 }

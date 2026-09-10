@@ -86,3 +86,47 @@ export function spotsLabel(count?: number | null) {
   if (count <= 0) return "No spots left";
   return `${count} spot${count === 1 ? "" : "s"} left`;
 }
+
+export const AVATAR_TONES = [
+  "from-[#f5cc00] to-[#ff4da3]",
+  "from-[#29244b] to-[#ff4da3]",
+  "from-[#bcebdc] to-[#7b8cff]",
+  "from-[#ffcf91] to-[#8e52ff]",
+  "from-[#8e52ff] to-[#49d7b8]",
+] as const;
+
+export function avatarTone(seed: string) {
+  let hash = 0;
+  for (const ch of seed) hash = (hash + ch.charCodeAt(0)) % AVATAR_TONES.length;
+  return AVATAR_TONES[hash] ?? AVATAR_TONES[0];
+}
+
+export function formatThreadTime(iso?: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return date.toLocaleDateString("en-US", { weekday: "short" });
+}
+
+export function threadUnread(input: {
+  viewerId: string;
+  hostUserId: string;
+  lastMessageSenderId: string | null;
+  lastMessageAt: string;
+  hostLastReadAt: string | null;
+  participantLastReadAt: string | null;
+}) {
+  if (!input.lastMessageSenderId || input.lastMessageSenderId === input.viewerId) return 0;
+  const lastRead = input.viewerId === input.hostUserId ? input.hostLastReadAt : input.participantLastReadAt;
+  if (!lastRead) return 1;
+  return new Date(input.lastMessageAt).getTime() > new Date(lastRead).getTime() ? 1 : 0;
+}
+
+export const MAX_MESSAGE_LENGTH = 4000;

@@ -13,7 +13,7 @@ type GigJoinButtonProps = {
 
 export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
   const router = useRouter();
-  const { applyToGig, hasApplied, source, user, ready } = useOffer();
+  const { applyToGig, hasApplied, ensureThread, source, user, ready } = useOffer();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(() => hasApplied(slug));
   const [role, setRole] = useState(roles[0] ?? "General support");
@@ -62,8 +62,26 @@ export function GigJoinButton({ slug, kind, roles }: GigJoinButtonProps) {
             {sent ? (
               <div className="mt-6 rounded-2xl bg-success/15 p-4">
                 <p className="text-sm font-bold text-[#328e1c]">Application sent.</p>
-                <p className="mt-1 text-sm leading-6 text-[#328e1c]/80">The host can now review your profile. We&apos;ll notify you when they respond.</p>
-                <button type="button" onClick={() => setOpen(false)} className="mt-4 min-h-11 rounded-full bg-black px-5 text-sm font-bold text-white">Done</button>
+                <p className="mt-1 text-sm leading-6 text-[#328e1c]/80">The host can now review your profile. Message them when you want a 1:1 thread for this gig.</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => setOpen(false)} className="min-h-11 rounded-full bg-black px-5 text-sm font-bold text-white">Done</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void ensureThread({ gigSlug: slug }).then((result) => {
+                        if (result.ok && result.thread) {
+                          setOpen(false);
+                          router.push(`/messages?thread=${result.thread.id}`);
+                          return;
+                        }
+                        if (result.status === 401) router.push(signInHref(`/gigs/${slug}`));
+                      });
+                    }}
+                    className="min-h-11 rounded-full bg-lavender px-5 text-sm font-bold text-black"
+                  >
+                    Message host
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={submit} className="mt-6 space-y-5">

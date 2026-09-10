@@ -212,6 +212,106 @@ export type Database = {
           },
         ];
       };
+      message_threads: {
+        Row: {
+          id: string;
+          gig_id: string;
+          host_user_id: string;
+          participant_user_id: string;
+          created_at: string;
+          last_message_at: string;
+          last_message_preview: string;
+          last_message_sender_id: string | null;
+          host_last_read_at: string | null;
+          participant_last_read_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          gig_id: string;
+          host_user_id: string;
+          participant_user_id: string;
+          created_at?: string;
+          last_message_at?: string;
+          last_message_preview?: string;
+          last_message_sender_id?: string | null;
+          host_last_read_at?: string | null;
+          participant_last_read_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          gig_id?: string;
+          host_user_id?: string;
+          participant_user_id?: string;
+          created_at?: string;
+          last_message_at?: string;
+          last_message_preview?: string;
+          last_message_sender_id?: string | null;
+          host_last_read_at?: string | null;
+          participant_last_read_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_threads_gig_id_fkey";
+            columns: ["gig_id"];
+            isOneToOne: false;
+            referencedRelation: "gigs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_threads_host_user_id_fkey";
+            columns: ["host_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "message_threads_participant_user_id_fkey";
+            columns: ["participant_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      messages: {
+        Row: {
+          id: string;
+          thread_id: string;
+          sender_user_id: string;
+          body: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          thread_id: string;
+          sender_user_id: string;
+          body: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          thread_id?: string;
+          sender_user_id?: string;
+          body?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "messages_thread_id_fkey";
+            columns: ["thread_id"];
+            isOneToOne: false;
+            referencedRelation: "message_threads";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "messages_sender_user_id_fkey";
+            columns: ["sender_user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
