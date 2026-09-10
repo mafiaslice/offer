@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { dataSource, ensureProfile, errorMessage, getSessionProfile, httpStatus } from "@/lib/data";
+import type { ProfilePatch } from "@/lib/data/types";
 
 export async function GET() {
   try {
@@ -12,12 +13,7 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const body = (await request.json()) as {
-      displayName?: string;
-      bio?: string;
-      intent?: "need" | "help" | "both";
-      phone?: string;
-    };
+    const body = (await request.json()) as ProfilePatch;
     const user = await ensureProfile(body);
     return NextResponse.json({ data: user, meta: { source: dataSource() } });
   } catch (error) {

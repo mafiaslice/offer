@@ -15,9 +15,9 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline) go 
 - `POST /api/applications`
 - `PATCH /api/applications/[id]` — `accepted` \| `declined` \| `withdrawn`
 - `GET /api/my-gigs`
-- `GET` / `PATCH /api/me`
+- `GET` / `PATCH /api/me` — session profile; GET creates a profiles row if the signed-in user is missing one; PATCH merges fields
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state so the UI works in CI.
+When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state so the UI works in CI. `/post` redirects unsigned users to `/auth?next=/post`. Host accept/decline on My Gigs does the same on 401.
 
 ## Local with Supabase
 
@@ -29,9 +29,21 @@ When Supabase is configured, persistence is Postgres (not `localStorage`). The d
    - Redirect: `http://localhost:3000/auth/callback`
 5. Copy Project URL and anon/publishable key into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 6. Restart `npm run dev`. Sign in at `/auth` with email. Click the magic link or enter the 6-digit code.
-7. Optional demo rows: after you have a profile, run `scripts/seed-demo-gigs.sql`. This is **opt-in** and is not required for build.
+7. Optional demo rows (after a profile exists):
 
-Do not commit `.env.local`. `SUPABASE_SERVICE_ROLE_KEY` is unused by the app (anon + RLS).
+```bash
+npm run seed:demo
+```
+
+`npm run seed:demo` reads `SUPABASE_SERVICE_ROLE_KEY` from `.env.local` only. Do not commit that key. Without it:
+
+```bash
+psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
+```
+
+This is **opt-in** and is not required for build. When Supabase env is set and the database has no open gigs, Discover shows an empty state with a Post CTA — it does not fall back to the demo catalog.
+
+Do not commit `.env.local`. The app uses anon + RLS. `SUPABASE_SERVICE_ROLE_KEY` is unused by the Next.js app (optional for the seed script only).
 
 Phone SMS needs Twilio on the project. Keep `NEXT_PUBLIC_SUPABASE_SMS_AUTH` unset until that is configured; the phone UI stays visible and gated.
 

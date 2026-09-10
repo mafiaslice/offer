@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import type { DataSource, SessionProfile, UserApplication } from "@/lib/data/types";
+import type { DataSource, ProfilePatch, SessionProfile, UserApplication } from "@/lib/data/types";
 
 export type LocalApplication = {
   id?: string;
@@ -14,10 +14,12 @@ export type LocalApplication = {
 
 type OfferContextValue = {
   source: DataSource;
+  ready: boolean;
   user: SessionProfile | null;
   applications: LocalApplication[];
   applyToGig: (gigSlug: string, role: string, note?: string) => Promise<{ ok: boolean; status?: number; error?: string }>;
-  reviewApplication: (id: string, status: "accepted" | "declined") => Promise<{ ok: boolean; error?: string }>;
+  reviewApplication: (id: string, status: "accepted" | "declined") => Promise<{ ok: boolean; status?: number; error?: string }>;
+  updateProfile: (input: ProfilePatch) => Promise<{ ok: boolean; status?: number; error?: string }>;
   hasApplied: (gigSlug: string) => boolean;
   refresh: () => Promise<void>;
 };
@@ -37,6 +39,7 @@ function toLocal(application: UserApplication): LocalApplication {
 
 export function OfferProvider({ children }: { children: ReactNode }) {
   const source: DataSource = isSupabaseConfigured() ? "supabase" : "demo-adapter";
+  const [ready, setReady] = useState(source !== "supabase");
   const [user, setUser] = useState<SessionProfile | null>(null);
   const [applications, setApplications] = useState<LocalApplication[]>([]);
 
@@ -50,16 +53,21 @@ export function OfferProvider({ children }: { children: ReactNode }) {
   }, [source]);
 
   const refresh = useCallback(async () => {
-    if (source !== "supabase") return;
-    const [me, mine] = await Promise.all([fetch("/api/me"), fetch("/api/my-gigs")]);
+    const me = await fetch("/api/me");
     if (me.ok) {
       const body = (await me.json()) as { data: SessionProfile | null };
-      setUser(body.data);
+      if (source === "supabase" || body.data) {
+        setUser(body.data);
+      }
     }
-    if (mine.ok) {
-      const body = (await mine.json()) as { data: { applications?: UserApplication[] } };
-      setApplications((body.data.applications ?? []).map(toLocal));
+    if (source === "supabase") {
+      const mine = await fetch("/api/my-gigs");
+      if (mine.ok) {
+        const body = (await mine.json()) as { data: { applications?: UserApplication[] } };
+        setApplications((body.data.applications ?? []).map(toLocal));
+      }
     }
+    setReady(true);
   }, [source]);
 
   useEffect(() => {
@@ -118,22 +126,38 @@ export function OfferProvider({ children }: { children: ReactNode }) {
     });
     const body = (await response.json()) as { error?: string };
     if (!response.ok) {
-      return { ok: false, error: body.error ?? "Could not update application." };
+      return { ok: false, status: response.status, error: body.error ?? "Could not update application." };
     }
-    return { ok: true };
+    return { ok: true, status: response.status };
+  }, []);
+
+  const updateProfile = useCallback(async (input: ProfilePatch) => {
+    const response = await fetch("/api/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await response.json()) as { data?: SessionProfile | null; error?: string };
+    if (!response.ok) {
+      return { ok: false, status: response.status, error: body.error ?? "Could not save your profile." };
+    }
+    if (body.data) setUser(body.data);
+    return { ok: true, status: response.status };
   }, []);
 
   const value = useMemo(
     () => ({
       source,
+      ready,
       user,
       applications,
       applyToGig,
       reviewApplication,
+      updateProfile,
       hasApplied: (gigSlug: string) => applications.some((application) => application.gigSlug === gigSlug),
       refresh,
     }),
-    [applications, applyToGig, refresh, reviewApplication, source, user],
+    [applications, applyToGig, ready, refresh, reviewApplication, source, updateProfile, user],
   );
 
   return <OfferContext.Provider value={value}>{children}</OfferContext.Provider>;

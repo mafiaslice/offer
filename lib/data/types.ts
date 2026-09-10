@@ -45,6 +45,13 @@ export type SessionProfile = {
   avatarUrl?: string;
 };
 
+export type ProfilePatch = {
+  displayName?: string;
+  bio?: string;
+  intent?: "need" | "help" | "both";
+  phone?: string;
+};
+
 export type UserApplication = {
   id: string;
   gigSlug: string;

@@ -49,7 +49,8 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 ## Discover
 
 - Ranking, filters, geography, and whether volunteer gigs are visually/algorithmically first.
-- Empty states and what a Host sees vs a Volunteer/Participant.
+- **Decided (v1 empty):** when Supabase env is set and there are no open gigs, Discover shows a live empty state with a Post CTA. Demo fixtures are only used when Supabase env is missing.
+- What a Host sees vs a Volunteer/Participant beyond that empty state.
 
 ## Post
 
