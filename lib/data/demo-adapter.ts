@@ -1,5 +1,6 @@
 import { demoChatMessages, demoGigDetails, demoInboxThreads, demoMyGigs, demoReviewQueue, demoStartable, toListItem } from "@/lib/data/demo-catalog";
 import { checkInPath, createCheckInToken, parseCheckInToken } from "@/lib/check-in-token";
+import { readExtraApplications, readExtraGigs, rememberExtraApplication, rememberExtraGig } from "@/lib/data/demo-walkthrough-store";
 import {
   applicationUiStatus,
   avatarTone,
@@ -40,11 +41,17 @@ import type {
 
 const source = "demo-adapter" as const;
 const DEMO_USER_ID = "demo-user";
-const extraGigs: GigDetail[] = [];
-const extraApplications: UserApplication[] = [];
+
+function extraGigs() {
+  return readExtraGigs();
+}
+
+function extraApplications() {
+  return readExtraApplications();
+}
 
 function allGigs() {
-  return [...extraGigs, ...demoGigDetails];
+  return [...extraGigs(), ...demoGigDetails];
 }
 
 function matchesFilters(gig: GigDetail, filters: GigListFilters = {}) {
@@ -83,15 +90,17 @@ function toHostedCard(gig: GigDetail): MyGigCard {
 export function listMyActivity(): MyActivity {
   const fixtureHosted = demoMyGigs.filter((gig) => gig.mode === "Hosted");
   const fixtureJoined = demoMyGigs.filter((gig) => gig.mode === "Joined");
+  const created = extraGigs();
+  const apps = extraApplications();
   const hostedSlugs = new Set(fixtureHosted.map((gig) => gig.slug));
   const joinedSlugs = new Set(fixtureJoined.map((gig) => gig.slug));
 
   const hosted = [
     ...fixtureHosted.map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
-    ...extraGigs.filter((gig) => !hostedSlugs.has(gig.slug)).map(toHostedCard),
+    ...created.filter((gig) => !hostedSlugs.has(gig.slug)).map(toHostedCard),
   ];
 
-  const joinedFromApps: MyGigCard[] = extraApplications.flatMap((application) => {
+  const joinedFromApps: MyGigCard[] = apps.flatMap((application) => {
     if (joinedSlugs.has(application.gigSlug)) return [];
     const gig = getGigBySlug(application.gigSlug);
     if (!gig) return [];
@@ -110,7 +119,7 @@ export function listMyActivity(): MyActivity {
   return {
     hosted,
     joined: [...fixtureJoined.map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })), ...joinedFromApps],
-    applications: extraApplications,
+    applications: apps,
     reviewQueue: demoReviewQueue,
   };
 }
@@ -151,13 +160,13 @@ export function createGig(input: CreateGigInput): GigDetail {
     startsAt,
     status: "open",
   };
-  extraGigs.unshift(gig);
+  rememberExtraGig(gig);
   return gig;
 }
 
 export function applyToGig(input: ApplyInput): UserApplication {
   const gig = getGigBySlug(input.gigSlug);
-  const existing = extraApplications.find((application) => application.gigSlug === input.gigSlug);
+  const existing = extraApplications().find((application) => application.gigSlug === input.gigSlug);
   if (existing) return existing;
   const application: UserApplication = {
     id: `demo-app-${input.gigSlug}`,
@@ -171,7 +180,7 @@ export function applyToGig(input: ApplyInput): UserApplication {
     createdAt: new Date().toISOString(),
     note: input.note,
   };
-  extraApplications.unshift(application);
+  rememberExtraApplication(application);
   return application;
 }
 
@@ -335,7 +344,7 @@ export function getCheckInContext(input: CheckInWriteInput): CheckInContext {
   const { gig, token, slotId, viaToken } = resolveDemoGig(input);
   const hostedSlugs = new Set([
     ...demoMyGigs.filter((item) => item.mode === "Hosted").map((item) => item.slug),
-    ...extraGigs.map((item) => item.slug),
+    ...extraGigs().map((item) => item.slug),
   ]);
   const viewerRole = viaToken ? "accepted" : hostedSlugs.has(gig.slug) ? "host" : "unsigned";
   const participants = viewerRole === "host" ? demoParticipantsFor(gig.id, gig.slug) : [];

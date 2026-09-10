@@ -24,7 +24,7 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, mes
 - `POST /api/check-ins` — `{ token \| gigSlug, userId?, slotId? }` check in (self, or Host on behalf of an accepted participant)
 - `POST /api/check-ins/checkout` — same body; sets `checked_out_at`
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Check-in writes in the demo adapter stay in server memory for that process. `/post` shows an in-page sign-in gate for unsigned visitors when Supabase is configured. `/check-in/[token]` redirects unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
+When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Gigs you create and applications you send in the demo adapter are written to `.next/cache` so Discover and My Gigs stay in sync during a local walkthrough (not durable product storage). Check-in writes in the demo adapter stay in server memory for that process. `/post` shows an in-page sign-in gate for unsigned visitors when Supabase is configured. `/check-in/[token]` redirects unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
 
 ## Local with Supabase
 
