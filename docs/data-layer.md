@@ -7,7 +7,7 @@ The app uses an adapter so CI and local `npm run build` work without credentials
 | `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set | `supabase` | Auth cookies + Postgres via RLS |
 | Either public env var is missing | `demo-adapter` | In-repo fixtures; writes are not durable |
 
-Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, messages) go through the same adapters and the App Router APIs:
+Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, messages, check-in/out) go through the same adapters and the App Router APIs:
 
 - `GET /api/gigs` — `q`, `category`, `kind`
 - `GET /api/gigs/[slug]`
@@ -20,13 +20,16 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, mes
 - `POST /api/threads` — `{ applicationId }` or `{ gigSlug }`; opens or returns the Host↔applicant thread (does not auto-create on apply/accept)
 - `GET /api/threads/[id]/messages` — messages in a thread; marks the viewer’s side read
 - `POST /api/threads/[id]/messages` — `{ body }` send a message
+- `GET /api/check-ins` — `token` or `gigSlug` (+ optional `slot`); Host sees roster + QR token; participants see their own row
+- `POST /api/check-ins` — `{ token \| gigSlug, userId?, slotId? }` check in (self, or Host on behalf of an accepted participant)
+- `POST /api/check-ins/checkout` — same body; sets `checked_out_at`
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. `/post` redirects unsigned users to `/auth?next=/post`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
+When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Check-in writes in the demo adapter stay in server memory for that process. `/post` and `/check-in/[token]` redirect unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
 
 ## Local with Supabase
 
 1. Create a Supabase project.
-2. Run the SQL in `supabase/migrations/` (both `20260910000001_init_offer_schema.sql` and `20260910000002_message_threads.sql`) in the SQL editor or via `supabase db push`.
+2. Run the SQL in `supabase/migrations/` (`20260910000001_init_offer_schema.sql`, `20260910000002_message_threads.sql`, and `20260910000003_check_ins.sql`) in the SQL editor or via `supabase db push`.
 3. Auth → Providers → **Email** on. Enable email OTP / magic links. Confirm email can be off for local testing.
 4. Auth → URL configuration:
    - Site URL: `http://localhost:3000`
@@ -60,3 +63,4 @@ Phone SMS needs Twilio on the project. Keep `NEXT_PUBLIC_SUPABASE_SMS_AUTH` unse
 - No payment provider. Paid gigs store incentive text only.
 - v1 messaging is **one 1:1 thread per** `(gig_id, host_user_id, participant_user_id)`. Participants read/write their thread; hosts also see threads on their gigs. Apply/accept does not insert a thread until someone opens the conversation.
 - Unread is a last-inbound badge (not a full count). Online/presence is demo-only.
+- v1 check-in is **one row per** `(gig_id, user_id)` with optional `slot_id`. The QR token is HMAC-signed (`CHECK_IN_SECRET`, with a demo fallback) and encodes the gig id. Hosts manage rows on their gigs; participants read/write their own after the host accepts them.

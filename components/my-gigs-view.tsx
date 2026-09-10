@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
+import { GigCheckInPanel } from "@/components/gig-check-in-panel";
 import type { EnsureThreadInput, HostApplicant, MyGigCard } from "@/lib/data/types";
 
 type GigStatus = "Upcoming" | "Completed";
@@ -34,9 +35,10 @@ function MyGigCardView({ gig, applicationStatus, onMessage }: { gig: MyGigCard; 
           <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${applicationStatus ? "bg-purple/10 text-purple" : gig.status === "Upcoming" ? "bg-purple/10 text-purple" : "bg-success/15 text-[#37951a]"}`}>{applicationStatus ?? gig.status}</span>
         </div>
       </Link>
-      {onMessage ? (
-        <div className="border-t border-black/5 px-4 py-3">
-          <button type="button" onClick={onMessage} className="text-sm font-bold text-purple">Message host</button>
+      {onMessage || (gig.mode === "Joined" && gig.checkInToken) ? (
+        <div className="flex flex-wrap gap-4 border-t border-black/5 px-4 py-3">
+          {onMessage ? <button type="button" onClick={onMessage} className="text-sm font-bold text-purple">Message host</button> : null}
+          {gig.mode === "Joined" && gig.checkInToken ? <Link href={`/check-in/${encodeURIComponent(gig.checkInToken)}`} className="text-sm font-bold text-purple">Check in</Link> : null}
         </div>
       ) : null}
     </article>
@@ -127,7 +129,12 @@ export function MyGigsView({ hosted, joined, reviewQueue }: MyGigsViewProps) {
 
       <div className="flex items-center justify-between"><div className="flex gap-5 border-b border-black/10"><button type="button" onClick={() => setStatus("Upcoming")} className={`relative pb-3 text-sm font-bold ${status === "Upcoming" ? "text-black" : "text-purple-gray"}`}>Upcoming{status === "Upcoming" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button><button type="button" onClick={() => setStatus("Completed")} className={`relative pb-3 text-sm font-bold ${status === "Completed" ? "text-black" : "text-purple-gray"}`}>Past{status === "Completed" ? <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-purple" /> : null}</button></div><Link href="/post" className="text-sm font-bold text-purple">+ Post</Link></div>
 
-      <div className="space-y-3">{filtered.length > 0 ? filtered.map((gig) => <MyGigCardView key={`${gig.mode}-${gig.id}-${gig.title}`} gig={gig} applicationStatus={applicationBySlug.get(gig.slug) ?? gig.applicationStatus} onMessage={gig.mode === "Joined" ? () => { void openThread({ gigSlug: gig.slug }); } : undefined} />) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
+      <div className="space-y-3">{filtered.length > 0 ? filtered.map((gig) => (
+        <div key={`${gig.mode}-${gig.id}-${gig.title}`} className="space-y-3">
+          <MyGigCardView gig={gig} applicationStatus={applicationBySlug.get(gig.slug) ?? gig.applicationStatus} onMessage={gig.mode === "Joined" ? () => { void openThread({ gigSlug: gig.slug }); } : undefined} />
+          {gig.mode === "Hosted" ? <GigCheckInPanel gigSlug={gig.slug} compact /> : null}
+        </div>
+      )) : <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
       {mode === "Hosted" && status === "Upcoming" && reviewQueue.length > 0 ? <ApplicationReview applicants={reviewQueue} onMessage={(applicationId) => { void openThread({ applicationId }); }} onDecide={async (id, nextStatus) => {
         if (source === "supabase" && ready && !user) {
           router.push(signInHref("/my-gigs"));

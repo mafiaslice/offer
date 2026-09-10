@@ -3,7 +3,7 @@
 export const AUTH_PATH = "/auth";
 
 export function isProtectedPage(pathname: string) {
-  return pathname === "/post" || pathname.startsWith("/post/");
+  return pathname === "/post" || pathname.startsWith("/post/") || pathname.startsWith("/check-in/");
 }
 
 export function safeNextPath(value: string | null | undefined) {

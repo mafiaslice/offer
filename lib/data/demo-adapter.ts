@@ -1,8 +1,13 @@
 import { demoChatMessages, demoGigDetails, demoInboxThreads, demoMyGigs, demoReviewQueue, demoStartable, toListItem } from "@/lib/data/demo-catalog";
-import { applicationUiStatus, avatarTone, formatThreadTime, MAX_MESSAGE_LENGTH, slugify } from "@/lib/data/format";
+import { checkInPath, createCheckInToken, parseCheckInToken } from "@/lib/check-in-token";
+import { applicationUiStatus, avatarTone, checkInState, formatThreadTime, initialsFromName, MAX_MESSAGE_LENGTH, slugify } from "@/lib/data/format";
 import type {
   ApplyInput,
   ChatMessage,
+  CheckInContext,
+  CheckInParticipant,
+  CheckInRecord,
+  CheckInWriteInput,
   CreateGigInput,
   EnsureThreadInput,
   GigDetail,
@@ -45,8 +50,8 @@ export function getSessionProfile(): SessionProfile | null {
 
 export function listMyActivity(): MyActivity {
   return {
-    hosted: demoMyGigs.filter((gig) => gig.mode === "Hosted"),
-    joined: demoMyGigs.filter((gig) => gig.mode === "Joined"),
+    hosted: demoMyGigs.filter((gig) => gig.mode === "Hosted").map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
+    joined: demoMyGigs.filter((gig) => gig.mode === "Joined").map((gig) => ({ ...gig, checkInToken: createCheckInToken(gig.id) })),
     applications: [],
     reviewQueue: demoReviewQueue,
   };
@@ -176,3 +181,152 @@ export function ensureThread(input: EnsureThreadInput): InboxThread {
 
   throw Object.assign(new Error("Choose a gig or application to message."), { status: 400 });
 }
+
+const DEMO_SELF_ID = "demo-user";
+
+type DemoCheckIn = CheckInRecord;
+
+const demoCheckIns: DemoCheckIn[] = [
+  {
+    id: "demo-ci-nia",
+    gigId: "demo-hangout-with-slice",
+    gigSlug: "hangout-with-slice",
+    gigTitle: "Hangout with Slice",
+    userId: "demo-user-nia",
+    displayName: "Nia Okafor",
+    initials: "NO",
+    roleLabel: "Setup & coordination",
+    checkedInAt: "2026-09-10T09:12:00.000Z",
+  },
+];
+
+function demoGigSummary(gig: GigDetail) {
+  return {
+    id: gig.id,
+    slug: gig.slug,
+    title: gig.title,
+    hostName: gig.hostName,
+    hostUserId: gig.hostUserId,
+    dateLabel: gig.dateLabel,
+    locationLabel: gig.locationLabel,
+    kindLabel: gig.kindLabel,
+  };
+}
+
+function resolveDemoGig(input: CheckInWriteInput) {
+  const parsed = input.token?.trim() ? parseCheckInToken(input.token.trim()) : null;
+  if (input.token?.trim() && !parsed) {
+    throw Object.assign(new Error("Check-in code is not valid."), { status: 404 });
+  }
+  const gig = parsed
+    ? demoGigDetails.find((item) => item.id === parsed.gigId) ?? demoMyGigs.find((item) => item.id === parsed.gigId)
+    : demoGigDetails.find((item) => item.slug === input.gigSlug) ?? demoMyGigs.find((item) => item.slug === input.gigSlug);
+  if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
+  const detail = "summary" in gig ? gig : demoGigDetails.find((item) => item.slug === gig.slug) ?? demoGigDetails[0];
+  const slotId = input.slotId?.trim() || parsed?.slotId;
+  const token = createCheckInToken(gig.id, slotId);
+  return { gig: detail, slotId, token, viaToken: Boolean(parsed) };
+}
+
+function demoParticipantsFor(gigId: string, gigSlug: string): CheckInParticipant[] {
+  const applicants = demoReviewQueue.filter((item) => item.gigSlug === gigSlug);
+  const people = applicants.length
+    ? applicants
+    : [
+        {
+          id: "demo-self",
+          applicantUserId: DEMO_SELF_ID,
+          name: "You",
+          initials: "YO",
+          role: "General support",
+        },
+      ];
+  return people.map((person) => {
+    const checkIn = demoCheckIns.find((row) => row.gigId === gigId && row.userId === person.applicantUserId) ?? null;
+    return {
+      userId: person.applicantUserId,
+      displayName: person.name,
+      initials: person.initials,
+      roleLabel: person.role,
+      applicationId: person.id,
+      checkIn,
+    };
+  });
+}
+
+export function getCheckInContext(input: CheckInWriteInput): CheckInContext {
+  const { gig, token, slotId, viaToken } = resolveDemoGig(input);
+  const hostedSlugs = new Set(demoMyGigs.filter((item) => item.mode === "Hosted").map((item) => item.slug));
+  const viewerRole = viaToken ? "accepted" : hostedSlugs.has(gig.slug) ? "host" : "unsigned";
+  const participants = viewerRole === "host" ? demoParticipantsFor(gig.id, gig.slug) : [];
+  const records = demoCheckIns.filter((row) => row.gigId === gig.id);
+  const ownCheckIn = records.find((row) => row.userId === DEMO_SELF_ID) ?? null;
+
+  return {
+    token,
+    path: checkInPath(token),
+    slotId,
+    gig: demoGigSummary(gig),
+    viewerRole,
+    ownCheckIn,
+    checkIns: records.filter((row) => checkInState(row) === "in"),
+    participants,
+  };
+}
+
+function upsertDemoCheckIn(gig: GigDetail, userId: string, displayName: string, initials: string, roleLabel: string, slotId?: string): CheckInRecord {
+  const existing = demoCheckIns.find((row) => row.gigId === gig.id && row.userId === userId);
+  const now = new Date().toISOString();
+  if (existing && checkInState(existing) === "in") return existing;
+  if (existing) {
+    existing.checkedInAt = now;
+    existing.checkedOutAt = undefined;
+    if (slotId) existing.slotId = slotId;
+    return existing;
+  }
+  const record: CheckInRecord = {
+    id: `demo-ci-${gig.id}-${userId}`,
+    gigId: gig.id,
+    gigSlug: gig.slug,
+    gigTitle: gig.title,
+    slotId,
+    userId,
+    displayName,
+    initials,
+    roleLabel,
+    checkedInAt: now,
+  };
+  demoCheckIns.push(record);
+  return record;
+}
+
+export function checkIn(input: CheckInWriteInput): CheckInRecord {
+  const { gig, slotId, viaToken } = resolveDemoGig(input);
+  if (viaToken && !input.userId) {
+    return upsertDemoCheckIn(gig, DEMO_SELF_ID, "You", initialsFromName("You"), "General support", slotId);
+  }
+  if (input.userId) {
+    const person = demoReviewQueue.find((item) => item.applicantUserId === input.userId);
+    return upsertDemoCheckIn(
+      gig,
+      input.userId,
+      person?.name ?? "Participant",
+      person?.initials ?? initialsFromName(person?.name ?? "Participant"),
+      person?.role ?? "General support",
+      slotId,
+    );
+  }
+  return upsertDemoCheckIn(gig, DEMO_SELF_ID, "You", initialsFromName("You"), "General support", slotId);
+}
+
+export function checkOut(input: CheckInWriteInput): CheckInRecord {
+  const { gig, viaToken } = resolveDemoGig(input);
+  const userId = input.userId?.trim() || (viaToken ? DEMO_SELF_ID : DEMO_SELF_ID);
+  const existing = demoCheckIns.find((row) => row.gigId === gig.id && row.userId === userId);
+  if (!existing || checkInState(existing) !== "in") {
+    throw Object.assign(new Error("This participant is not checked in."), { status: 400 });
+  }
+  existing.checkedOutAt = new Date().toISOString();
+  return existing;
+}
+

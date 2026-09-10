@@ -1,9 +1,11 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
+import { createCheckInToken, checkInPath, parseCheckInToken } from "@/lib/check-in-token";
 import {
   applicationUiStatus,
   avatarTone,
+  checkInState,
   combineDateAndTime,
   coverToneFor,
   formatDateLabel,
@@ -38,6 +40,11 @@ import type {
   StartableThread,
   ThreadMessagesPayload,
   UserApplication,
+  CheckInContext,
+  CheckInParticipant,
+  CheckInRecord,
+  CheckInViewerRole,
+  CheckInWriteInput,
 } from "@/lib/data/types";
 
 type GigRow = Database["public"]["Tables"]["gigs"]["Row"];
@@ -434,6 +441,7 @@ export async function listMyActivity(): Promise<MyActivity> {
     ...toListItem(gig, capacities.get(gig.id) || null),
     mode: "Hosted",
     status: gigLifecycleStatus(gig.starts_at, gig.status),
+    checkInToken: createCheckInToken(gig.id),
   }));
 
   const applications: UserApplication[] = (applicationRows ?? []).flatMap((row) => {
@@ -464,6 +472,7 @@ export async function listMyActivity(): Promise<MyActivity> {
         mode: "Joined",
         status: gigLifecycleStatus(gig.starts_at, gig.status),
         applicationStatus: applicationUiStatus(row.status),
+        checkInToken: createCheckInToken(gig.id),
       },
     ];
   });
@@ -754,4 +763,288 @@ export async function ensureThread(input: EnsureThreadInput): Promise<{ thread: 
   }
 
   throw Object.assign(new Error("Choose a gig or application to message."), { status: 400 });
+}
+
+type CheckInRow = Database["public"]["Tables"]["check_ins"]["Row"];
+
+function toCheckInRecord(
+  row: CheckInRow,
+  gig: { id: string; slug: string; title: string },
+  name: string,
+  roleLabel: string,
+): CheckInRecord {
+  return {
+    id: row.id,
+    gigId: gig.id,
+    gigSlug: gig.slug,
+    gigTitle: gig.title,
+    slotId: row.slot_id ?? undefined,
+    userId: row.user_id,
+    displayName: name,
+    initials: initialsFromName(name),
+    roleLabel,
+    checkedInAt: row.checked_in_at,
+    checkedOutAt: row.checked_out_at ?? undefined,
+  };
+}
+
+async function loadGigForCheckIn(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  input: { token?: string; gigSlug?: string; slotId?: string },
+) {
+  const parsed = input.token?.trim() ? parseCheckInToken(input.token.trim()) : null;
+  if (input.token?.trim() && !parsed) {
+    throw Object.assign(new Error("Check-in code is not valid."), { status: 404 });
+  }
+
+  let gig: GigWithHost | null = null;
+  if (parsed) {
+    const { data, error } = await supabase
+      .from("gigs")
+      .select("*, profiles!gigs_host_user_id_fkey ( display_name, avatar_url )")
+      .eq("id", parsed.gigId)
+      .maybeSingle();
+    if (error) throw Object.assign(new Error(error.message), { status: 500 });
+    gig = (data as GigWithHost | null) ?? null;
+  } else if (input.gigSlug?.trim()) {
+    const { data, error } = await supabase
+      .from("gigs")
+      .select("*, profiles!gigs_host_user_id_fkey ( display_name, avatar_url )")
+      .eq("slug", input.gigSlug.trim())
+      .maybeSingle();
+    if (error) throw Object.assign(new Error(error.message), { status: 500 });
+    gig = (data as GigWithHost | null) ?? null;
+  }
+
+  if (!gig) throw Object.assign(new Error("Gig not found."), { status: 404 });
+
+  const slotId = input.slotId?.trim() || parsed?.slotId;
+  if (slotId) {
+    const { data: slot } = await supabase.from("gig_slots").select("id, gig_id").eq("id", slotId).maybeSingle();
+    if (!slot || slot.gig_id !== gig.id) {
+      throw Object.assign(new Error("That slot is not on this gig."), { status: 400 });
+    }
+  }
+
+  const token = createCheckInToken(gig.id, slotId);
+  return { gig, slotId, token };
+}
+
+async function viewerRoleForGig(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  gigId: string,
+  hostUserId: string,
+  userId: string,
+): Promise<{ role: CheckInViewerRole; applicationRole: string }> {
+  if (hostUserId === userId) return { role: "host", applicationRole: "Host" };
+  const { data: application } = await supabase
+    .from("applications")
+    .select("status, role_id")
+    .eq("gig_id", gigId)
+    .eq("applicant_user_id", userId)
+    .maybeSingle();
+  if (!application || application.status === "withdrawn") return { role: "none", applicationRole: "General support" };
+  const { data: role } = application.role_id
+    ? await supabase.from("gig_roles").select("title").eq("id", application.role_id).maybeSingle()
+    : { data: null };
+  const applicationRole = role?.title || "General support";
+  if (application.status === "accepted") return { role: "accepted", applicationRole };
+  if (application.status === "pending") return { role: "pending", applicationRole };
+  return { role: "none", applicationRole };
+}
+
+export async function getCheckInContext(input: CheckInWriteInput): Promise<CheckInContext> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { gig, slotId, token } = await loadGigForCheckIn(supabase, input);
+
+  const viewer = user
+    ? await viewerRoleForGig(supabase, gig.id, gig.host_user_id, user.id)
+    : { role: "unsigned" as const, applicationRole: "" };
+  const isHost = viewer.role === "host";
+
+  const { data: checkInRows, error: checkInError } = user
+    ? await supabase.from("check_ins").select("*").eq("gig_id", gig.id).order("checked_in_at", { ascending: true })
+    : { data: [] as CheckInRow[], error: null };
+  if (checkInError) throw Object.assign(new Error(checkInError.message), { status: 500 });
+
+  const roleByUser = new Map<string, string>();
+  const nameById = new Map<string, string>();
+  let participants: CheckInParticipant[] = [];
+
+  if (isHost) {
+    const { data: accepted } = await supabase
+      .from("applications")
+      .select("id, applicant_user_id, role_id, status")
+      .eq("gig_id", gig.id)
+      .eq("status", "accepted");
+    const applicantIds = [...new Set((accepted ?? []).map((row) => row.applicant_user_id))];
+    const roleIds = [...new Set((accepted ?? []).map((row) => row.role_id).filter((id): id is string => Boolean(id)))];
+    const [{ data: profiles }, { data: roles }] = await Promise.all([
+      applicantIds.length
+        ? supabase.from("profiles").select("id, display_name").in("id", applicantIds)
+        : Promise.resolve({ data: [] as { id: string; display_name: string }[] }),
+      roleIds.length
+        ? supabase.from("gig_roles").select("id, title").in("id", roleIds)
+        : Promise.resolve({ data: [] as { id: string; title: string }[] }),
+    ]);
+    const titleByRole = new Map((roles ?? []).map((role) => [role.id, role.title]));
+    for (const row of profiles ?? []) nameById.set(row.id, row.display_name);
+    for (const row of accepted ?? []) {
+      roleByUser.set(row.applicant_user_id, (row.role_id && titleByRole.get(row.role_id)) || "General support");
+    }
+
+    const records = (checkInRows ?? []).map((row) =>
+      toCheckInRecord(row, gig, nameById.get(row.user_id)?.trim() || "Participant", roleByUser.get(row.user_id) || "General support"),
+    );
+    const recordByUser = new Map(records.map((row) => [row.userId, row]));
+    participants = (accepted ?? []).map((row) => {
+      const displayName = nameById.get(row.applicant_user_id)?.trim() || "Participant";
+      return {
+        userId: row.applicant_user_id,
+        displayName,
+        initials: initialsFromName(displayName),
+        roleLabel: roleByUser.get(row.applicant_user_id) || "General support",
+        applicationId: row.id,
+        checkIn: recordByUser.get(row.applicant_user_id) ?? null,
+      };
+    });
+
+    return {
+      token,
+      path: checkInPath(token),
+      slotId,
+      gig: {
+        id: gig.id,
+        slug: gig.slug,
+        title: gig.title,
+        hostName: hostNameFrom(gig.profiles),
+        hostUserId: gig.host_user_id,
+        dateLabel: formatDateLabel(gig.starts_at),
+        locationLabel: gig.location_label ?? "Location TBA",
+        kindLabel: kindLabel(gig.kind),
+      },
+      viewerRole: "host",
+      ownCheckIn: user ? (records.find((row) => row.userId === user.id) ?? null) : null,
+      checkIns: records.filter((row) => checkInState(row) === "in"),
+      participants,
+    };
+  }
+
+  const visibleRows = (checkInRows ?? []).filter((row) => user && row.user_id === user.id);
+  const ownName = user ? ((await getSessionProfile())?.displayName || "You") : "You";
+  if (user) nameById.set(user.id, ownName);
+  if (user) roleByUser.set(user.id, viewer.applicationRole);
+  const records = visibleRows.map((row) =>
+    toCheckInRecord(row, gig, nameById.get(row.user_id)?.trim() || "You", roleByUser.get(row.user_id) || "General support"),
+  );
+
+  return {
+    token,
+    path: checkInPath(token),
+    slotId,
+    gig: {
+      id: gig.id,
+      slug: gig.slug,
+      title: gig.title,
+      hostName: hostNameFrom(gig.profiles),
+      hostUserId: gig.host_user_id,
+      dateLabel: formatDateLabel(gig.starts_at),
+      locationLabel: gig.location_label ?? "Location TBA",
+      kindLabel: kindLabel(gig.kind),
+    },
+    viewerRole: viewer.role,
+    ownCheckIn: records[0] ?? null,
+    checkIns: records.filter((row) => checkInState(row) === "in"),
+    participants: [],
+  };
+}
+
+async function resolveCheckInTarget(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  gig: GigRow,
+  actorId: string,
+  requestedUserId?: string,
+) {
+  const actor = await viewerRoleForGig(supabase, gig.id, gig.host_user_id, actorId);
+  const targetId = requestedUserId?.trim() && actor.role === "host" ? requestedUserId.trim() : actorId;
+
+  if (requestedUserId?.trim() && actor.role !== "host") {
+    throw Object.assign(new Error("Only the host can check someone else in."), { status: 403 });
+  }
+
+  const target = targetId === actorId ? actor : await viewerRoleForGig(supabase, gig.id, gig.host_user_id, targetId);
+  if (targetId === gig.host_user_id && actor.role === "host") {
+    throw Object.assign(new Error("Hosts record attendance for accepted participants."), { status: 400 });
+  }
+  if (target.role !== "accepted") {
+    if (target.role === "pending") {
+      throw Object.assign(new Error("The host needs to accept this application before check-in."), { status: 403 });
+    }
+    throw Object.assign(new Error("Only accepted participants can check in on this gig."), { status: 403 });
+  }
+
+  return { targetId, roleLabel: target.applicationRole };
+}
+
+export async function checkIn(input: CheckInWriteInput): Promise<CheckInRecord> {
+  const { supabase, user } = await requireUser();
+  const { gig, slotId } = await loadGigForCheckIn(supabase, input);
+  const { targetId, roleLabel } = await resolveCheckInTarget(supabase, gig, user.id, input.userId);
+
+  const { data: existing } = await supabase.from("check_ins").select("*").eq("gig_id", gig.id).eq("user_id", targetId).maybeSingle();
+  if (existing && !existing.checked_out_at) {
+    const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", targetId).maybeSingle();
+    return toCheckInRecord(existing, gig, profile?.display_name?.trim() || "Participant", roleLabel);
+  }
+
+  const now = new Date().toISOString();
+  if (existing) {
+    const { data: updated, error } = await supabase
+      .from("check_ins")
+      .update({ checked_in_at: now, checked_out_at: null, slot_id: slotId ?? existing.slot_id })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+    if (error || !updated) throw Object.assign(new Error(error?.message ?? "Could not check in."), { status: 400 });
+    const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", targetId).maybeSingle();
+    return toCheckInRecord(updated, gig, profile?.display_name?.trim() || "Participant", roleLabel);
+  }
+
+  const { data: inserted, error } = await supabase
+    .from("check_ins")
+    .insert({
+      gig_id: gig.id,
+      user_id: targetId,
+      slot_id: slotId ?? null,
+      checked_in_at: now,
+    })
+    .select("*")
+    .single();
+  if (error || !inserted) throw Object.assign(new Error(error?.message ?? "Could not check in."), { status: 400 });
+  const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", targetId).maybeSingle();
+  return toCheckInRecord(inserted, gig, profile?.display_name?.trim() || "Participant", roleLabel);
+}
+
+export async function checkOut(input: CheckInWriteInput): Promise<CheckInRecord> {
+  const { supabase, user } = await requireUser();
+  const { gig } = await loadGigForCheckIn(supabase, input);
+  const { targetId, roleLabel } = await resolveCheckInTarget(supabase, gig, user.id, input.userId);
+
+  const { data: existing } = await supabase.from("check_ins").select("*").eq("gig_id", gig.id).eq("user_id", targetId).maybeSingle();
+  if (!existing || existing.checked_out_at) {
+    throw Object.assign(new Error("This participant is not checked in."), { status: 400 });
+  }
+
+  const { data: updated, error } = await supabase
+    .from("check_ins")
+    .update({ checked_out_at: new Date().toISOString() })
+    .eq("id", existing.id)
+    .select("*")
+    .single();
+  if (error || !updated) throw Object.assign(new Error(error?.message ?? "Could not check out."), { status: 400 });
+  const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", targetId).maybeSingle();
+  return toCheckInRecord(updated, gig, profile?.display_name?.trim() || "Participant", roleLabel);
 }

@@ -42,8 +42,12 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 ## Showing up
 
-- Check-in method (QR and related flows are not implemented).
-- Who can check whom in, and whether a Slot is required on `CheckIn`.
+- **Decided (v1):** attendance is one `CheckIn` row per `(gig, user)` with `checked_in_at` and optional `checked_out_at`. Slot on the row is optional.
+- **Decided (v1):** the QR is a signed token URL `/check-in/[token]` tied to a **Gig** (optional Slot can be encoded in the token). It identifies the gig; it is not a capability token. Check-in still requires a signed-in **Host** (on behalf of an accepted participant) or an **accepted** participant checking themselves in.
+- **Decided (v1):** Hosts show the QR on My Gigs and on gig detail for gigs they host. Scanning with a phone camera opens the check-in page.
+- Re-check-in after checkout updates the same row (new `checked_in_at`, clears `checked_out_at`).
+- **Not v1:** per-application tokens, geofence, photo proof, no-show penalties, offline scan queues, or feeding attendance into ratings / “trusted hands”.
+- Whether a Slot is required, whether checkout is mandatory, and whether the Host must be physically present.
 
 ## Trust
 

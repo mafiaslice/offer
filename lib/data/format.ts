@@ -130,3 +130,15 @@ export function threadUnread(input: {
 }
 
 export const MAX_MESSAGE_LENGTH = 4000;
+
+export function formatCheckInTime(iso?: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+export function checkInState(record: { checkedInAt: string; checkedOutAt?: string } | null | undefined) {
+  if (!record) return "out" as const;
+  return record.checkedOutAt ? ("out" as const) : ("in" as const);
+}

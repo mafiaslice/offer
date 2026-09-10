@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GigJoinButton } from "@/components/gig-join-button";
-import { getGigBySlug } from "@/lib/data";
+import { GigCheckInPanel } from "@/components/gig-check-in-panel";
+import { getCheckInContext, getGigBySlug } from "@/lib/data";
 
 const tones = {
   sunset: "from-[#ffcf91] via-[#ff7da8] to-[#8e52ff]",
@@ -31,6 +32,10 @@ export default async function GigDetailsPage({
   const gig = await getGigBySlug(slug);
 
   if (!gig) notFound();
+
+  const attendance = await getCheckInContext({ gigSlug: slug }).then((result) => result.data).catch(() => null);
+  const showHostAttendance = attendance?.viewerRole === "host";
+  const showSelfCheckIn = attendance?.viewerRole === "accepted";
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-5">
@@ -95,6 +100,13 @@ export default async function GigDetailsPage({
           <span className="rounded-full bg-white px-3 py-2 text-xs font-bold text-black shadow-sm">⌖ {gig.locationLabel}</span>
         </div>
       </section>
+
+      {showHostAttendance ? <GigCheckInPanel gigSlug={gig.slug} /> : null}
+      {showSelfCheckIn && attendance ? (
+        <Link href={attendance.path} className="flex min-h-12 items-center justify-center rounded-2xl bg-white text-sm font-bold text-purple shadow-[0_14px_34px_rgba(53,32,79,0.08)]">
+          Check in for this gig
+        </Link>
+      ) : null}
 
       <GigJoinButton slug={gig.slug} kind={gig.kindLabel} roles={gig.roles} />
     </div>
