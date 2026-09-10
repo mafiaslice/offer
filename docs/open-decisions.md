@@ -4,23 +4,24 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 ## Identity and accounts
 
-- How a person signs in (if at all in v1), and whether a Host is a separate account type or a capability on a User.
-- What appears on **Profile** beyond a display name.
+- **Decided:** Host is a **capability on User**. Anyone signed in can post a Gig. There is no separate Host account type.
+- **Decided:** v1 auth is **Supabase email magic link / OTP**, with session cookies for SSR. Phone SMS is optional and gated until Twilio is configured on the project.
+- What appears on **Profile** beyond a display name (and optional bio / intent collected at signup).
 - Whether identity verification exists, and when it is required. Not in this scaffold.
 
 ## Gigs, roles, and slots
 
 - Can one Gig mix volunteer and paid **Roles**, or is `kind` only on the Gig?
-- Do **Slots** belong to a Role, to a Gig, or either?
-- Location model (place name vs address vs area vs remote).
+- Do **Slots** belong to a Role, to a Gig, or either? Schema allows an optional `role_id` on a slot.
+- Location model (place name vs address vs area vs remote). v1 stores a place label and in-person/remote.
 - Time zones, recurring gigs, and multi-day gigs.
-- Gig lifecycle (draft, open, filled, completed, cancelled) — values are not finalized.
+- Gig lifecycle (draft, open, filled, completed, cancelled) — values exist in the schema. **v1 create publishes as `open`** so the gig is discoverable; confirmation-before-publish is still open.
 - Capacity: overbooking, waitlists, Host-only edits after publish.
 
 ## Applying and matching
 
-- Application statuses and who can accept/decline.
-- Whether Volunteers apply, are invited, or both.
+- **Decided (v1 storage):** application statuses are `pending`, `accepted`, `declined`, `withdrawn`. Applicants manage their own rows; hosts accept/decline on their gigs.
+- Whether Volunteers apply, are invited, or both. v1 is apply-only.
 - What **Participant** means relative to Volunteer on a paid vs volunteer gig.
 - Whether matching can happen without any payment step on paid gigs (product forbids mandatory payment *before* matching as a default; paid-gig settlement is still unspecified).
 
@@ -52,8 +53,8 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 ## Post
 
-- Minimum fields to create a Gig.
-- Whether Post is Host-only.
+- Minimum fields to create a Gig. v1 requires name, summary, place, date, and start time.
+- **Decided:** Post is not a separate Host-only account. It requires being signed in when Supabase is configured.
 
 ## Platform shape
 
@@ -65,3 +66,7 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 - Pixel-level UI waits on reference boards ([`ui-reference.md`](./ui-reference.md)).
 - Icon set, display type, photography style, and desktop nav treatment are unset.
+
+## Data
+
+- **Decided:** Supabase is the production auth + Postgres provider. See [`data-layer.md`](./data-layer.md).

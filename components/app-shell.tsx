@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "@/lib/nav";
 import { NavIcon } from "@/components/nav-icon";
-import { OfferProvider } from "@/components/offer-provider";
+import { OfferProvider, useOffer } from "@/components/offer-provider";
 
 type AppShellProps = {
   children: ReactNode;
@@ -53,9 +53,7 @@ export function AppShell({ children }: AppShellProps) {
             <span className="grid size-8 place-items-center rounded-xl bg-black text-sm font-bold text-white">O</span>
             <span className="text-xl font-bold tracking-[-0.05em]">offer</span>
           </Link>
-          <Link href="/profile" className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-[#f5cc00] via-[#ff4da3] to-purple text-xs font-bold text-white shadow-sm" aria-label="Open profile">
-            MS
-          </Link>
+          <ProfileBadge />
         </header>
 
         <main className="mx-auto w-full max-w-[1180px] flex-1 px-5 py-6 pb-28 sm:px-8 lg:px-12 lg:py-10 lg:pb-12">
@@ -91,5 +89,15 @@ export function AppShell({ children }: AppShellProps) {
       </div>
       </div>
     </OfferProvider>
+  );
+}
+
+function ProfileBadge() {
+  const { user, source } = useOffer();
+  const initials = user?.initials ?? (source === "demo-adapter" ? "MS" : "O");
+  return (
+    <Link href="/profile" className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-[#f5cc00] via-[#ff4da3] to-purple text-xs font-bold text-white shadow-sm" aria-label="Open profile">
+      {initials}
+    </Link>
   );
 }

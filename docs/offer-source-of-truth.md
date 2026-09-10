@@ -49,13 +49,12 @@ Do not name, model, or ship UI around:
 
 ## This scaffold does not include
 
-These are explicitly out of scope for the initial workspace (placeholders and types only):
+These stay out of scope (placeholders and types only):
 
-- Auth, identity verification
-- Database or external APIs
+- Identity verification
 - Payments, escrow, wallets
 - Messaging backends
 - QR / check-in implementation
-- Live discover ranking or search
+- Live discover ranking
 
-See [`open-decisions.md`](./open-decisions.md) before filling any of those in.
+Auth and Postgres are Supabase when env is set; otherwise a demo adapter. See [`data-layer.md`](./data-layer.md) and [`open-decisions.md`](./open-decisions.md).

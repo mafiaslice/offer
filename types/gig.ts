@@ -1,4 +1,4 @@
-import type { Host } from "./host";
+import type { User } from "./user";
 
 /**
  * Volunteer is the primary gig kind. Paid gigs are secondary.
@@ -9,11 +9,12 @@ export type GigKind = "volunteer" | "paid";
 
 /**
  * A Gig is the unit of work on Offer — not an "offer" or a "task".
- * Lifecycle values are not finalized.
+ * v1 create publishes as `open` so the gig is discoverable. Other
+ * lifecycle values exist in the schema but are not a product spec.
  */
 export type Gig = {
   id: string;
-  hostId: Host["id"];
+  hostId: User["id"];
   title: string;
   summary: string;
   kind: GigKind;
@@ -44,6 +45,6 @@ export type GigSlot = {
   gigId: Gig["id"];
   roleId?: GigRole["id"];
   startsAt: string;
-  endsAt: string;
+  endsAt?: string;
   capacity?: number;
 };
