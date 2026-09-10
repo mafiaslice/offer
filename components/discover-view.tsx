@@ -10,9 +10,10 @@ const categories = ["All gigs", "Events", "Community", "Hospitality", "Projects"
 
 type DiscoverViewProps = {
   initialGigs: GigListItem[];
+  loadError?: string;
 };
 
-export function DiscoverView({ initialGigs }: DiscoverViewProps) {
+export function DiscoverView({ initialGigs, loadError }: DiscoverViewProps) {
   const { user, source } = useOffer();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<(typeof categories)[number]>("All gigs");
@@ -24,7 +25,7 @@ export function DiscoverView({ initialGigs }: DiscoverViewProps) {
   }), [category, initialGigs, kind, query]);
   const topical = filtered.filter((gig) => gig.kindLabel === "Volunteer");
   const paid = filtered.filter((gig) => gig.kindLabel === "Paid gig");
-  const liveEmpty = source === "supabase" && initialGigs.length === 0;
+  const liveEmpty = source === "supabase" && initialGigs.length === 0 && !loadError;
 
   return (
     <div className="space-y-8">
@@ -35,6 +36,12 @@ export function DiscoverView({ initialGigs }: DiscoverViewProps) {
       <div className="hide-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">{categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} className={`min-h-10 shrink-0 rounded-full px-4 text-sm font-bold transition-colors ${category === item ? "bg-black text-white" : "border border-black/5 bg-white text-purple-gray hover:text-black"}`}>{item}</button>)}</div>
       <div className="flex gap-2"><button type="button" onClick={() => setKind("All")} className={`min-h-9 rounded-full px-4 text-xs font-bold ${kind === "All" ? "bg-purple text-white" : "bg-white text-purple-gray shadow-sm"}`}>Everything</button><button type="button" onClick={() => setKind("Volunteer")} className={`min-h-9 rounded-full px-4 text-xs font-bold ${kind === "Volunteer" ? "bg-purple text-white" : "bg-white text-purple-gray shadow-sm"}`}>Volunteer first</button><button type="button" onClick={() => setKind("Paid gig")} className={`min-h-9 rounded-full px-4 text-xs font-bold ${kind === "Paid gig" ? "bg-purple text-white" : "bg-white text-purple-gray shadow-sm"}`}>Paid gigs</button></div>
 
+      {loadError ? (
+        <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
+          <p className="text-base font-bold">Discover couldn&apos;t load gigs</p>
+          <p className="mt-2 text-sm leading-6 text-purple-gray">Live data didn&apos;t return a list. This is not the demo catalog — try again in a moment.</p>
+        </div>
+      ) : null}
       {liveEmpty ? (
         <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
           <p className="text-base font-bold">No gigs yet</p>

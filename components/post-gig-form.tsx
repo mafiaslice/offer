@@ -72,6 +72,8 @@ export function PostGigForm() {
     setSlug(body.data?.slug ?? null);
     setPersisted(Boolean(body.meta?.persisted));
     setSubmitted(true);
+    router.push("/my-gigs");
+    router.refresh();
   }
 
   return (

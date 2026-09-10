@@ -30,6 +30,8 @@ export type {
   EnsureThreadInput,
   GigDetail,
   GigListItem,
+  GigRoleView,
+  GigSlotView,
   InboxPayload,
   InboxThread,
   MyActivity,

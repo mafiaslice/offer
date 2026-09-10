@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { PostGigForm } from "@/components/post-gig-form";
-import { redirectUnsignedToAuth } from "@/lib/require-session";
+import { SignInGate } from "@/components/sign-in-gate";
+import { getSessionProfile } from "@/lib/data";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +11,18 @@ export const metadata: Metadata = {
 };
 
 export default async function PostPage() {
-  await redirectUnsignedToAuth("/post");
+  const session = isSupabaseConfigured() ? await getSessionProfile().catch(() => null) : { id: "demo" };
+  if (!session) {
+    return (
+      <SignInGate
+        next="/post"
+        kicker="Bring good people together"
+        title="Post a gig."
+        body="Sign in to create a gig. Anyone with an account can host — Host is a capability, not a separate account."
+        action="Sign in to post"
+      />
+    );
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-7">

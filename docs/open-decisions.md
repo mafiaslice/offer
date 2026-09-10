@@ -53,17 +53,32 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 - Rating scale, who can rate whom, and whether ratings are public.
 - What “trusted hands” means operationally (repeat Hosts, attendance, something else).
+- **Not v1:** Profile does not show a numeric trust score. Applicant rows may still say “New to Offer” as copy, not a ratings schema.
 
 ## Discover
 
 - Ranking, filters, geography, and whether volunteer gigs are visually/algorithmically first.
 - **Decided (v1 empty):** when Supabase env is set and there are no open gigs, Discover shows a live empty state with a Post CTA. Demo fixtures are only used when Supabase env is missing.
 - What a Host sees vs a Volunteer/Participant beyond that empty state.
+- Ranking still does not use geography or volunteer-first algorithms — volunteer cards are listed first in the Discover layout only.
+
+## Gig detail
+
+- **Decided (v1):** gig detail is `title`, host, place, time, `summary` (used as about/body), roles, slots/spots, and apply/join. There is no separate `body` column; adapters map `gigs.summary` to both summary and about.
+- **Decided (v1 signed-out apply):** with Supabase configured, the join/apply CTA routes to `/auth?next=/gigs/[slug]`. The demo adapter still lets you apply without a session.
+- **Decided (v1 missing data):** unknown slugs and adapter failures render an empty state on the gig page. They do not use the Next.js error overlay as the primary UI.
+- Whether a missing description should block apply (v1 still allows “General support”).
 
 ## Post
 
 - Minimum fields to create a Gig. v1 requires name, summary, place, date, and start time.
 - **Decided:** Post is not a separate Host-only account. It requires being signed in when Supabase is configured.
+- **Decided (v1 walkthrough):** unsigned visitors see an in-page sign-in gate on `/post` (not a raw crash). After a successful create, the app goes to My Gigs.
+
+## Profile
+
+- What appears on **Profile** beyond a display name (and optional bio / intent collected at signup).
+- **Decided (v1):** Profile always shows a display name (session name, demo name, or “Guest”). It does not invent a trust score or require identity verification.
 
 ## Platform shape
 
