@@ -112,6 +112,7 @@ export function MyGigsView({ hosted, joined, reviewQueue, loadError }: MyGigsVie
   const filtered = useMemo(() => gigs.filter((gig) => gig.status === status && (mode === "All" || gig.mode === mode)), [gigs, mode, status]);
   const joinedCount = joined.length;
   const hostedCount = hosted.length;
+  const completedCount = gigs.filter((gig) => gig.status === "Completed").length;
   const needsSignIn = source === "supabase" && ready && !user;
   const showReview = reviewQueue.length > 0 && status === "Upcoming" && mode !== "Joined";
 
@@ -130,9 +131,9 @@ export function MyGigsView({ hosted, joined, reviewQueue, loadError }: MyGigsVie
 
   return (
     <div className="mx-auto max-w-3xl space-y-7">
-      <header className="space-y-2"><p className="text-sm font-semibold text-purple">Your activity</p><h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">My gigs.</h1><p className="text-sm leading-6 text-purple-gray sm:text-base">Keep track of where you&apos;re showing up and what you&apos;re building.</p></header>
+      <header className="space-y-2"><p className="text-sm font-semibold text-purple">Your gigs</p><h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Your gigs.</h1><p className="text-sm leading-6 text-purple-gray sm:text-base">Gigs you&apos;re volunteering on and gigs you host.</p></header>
 
-      <div className="grid grid-cols-3 gap-3"><Stat value={String(joinedCount)} label="Joined" /><Stat value={String(hostedCount)} label="Hosted" /><Stat value="—" label="People met" /></div>
+      <div className="grid grid-cols-3 gap-3"><Stat value={String(joinedCount)} label="Joined" /><Stat value={String(hostedCount)} label="Hosted" /><Stat value={String(completedCount)} label="Gigs completed" /></div>
 
       {needsSignIn ? (
         <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">

@@ -58,7 +58,7 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 ## Discover
 
 - Ranking, filters, geography, and whether volunteer gigs are visually/algorithmically first.
-- **Decided (v1 empty):** when Supabase env is set and there are no open gigs, Discover shows a live empty state with a Post CTA. Demo fixtures are only used when Supabase env is missing.
+- **Decided (v1 empty):** when Supabase env is set and there are no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button. Demo fixtures are only used when Supabase env is missing.
 - What a Host sees vs a Volunteer/Participant beyond that empty state.
 - Ranking still does not use geography or volunteer-first algorithms — volunteer cards are listed first in the Discover layout only.
 

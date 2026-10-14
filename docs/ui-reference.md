@@ -10,7 +10,7 @@ Visual **matching** waits for design reference boards. This repo only establishe
 - Soft gradients
 - Mobile-first
 - Rounded sans-serif for UI; display type sparingly
-- Bottom navigation (mobile): Discover, My Gigs, Messages, Profile, Post
+- Bottom navigation (mobile): Discover, My Gigs, Messages, Profile, Post a Gig
 
 **Do not use forest-green.**
 

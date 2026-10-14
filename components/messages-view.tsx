@@ -223,7 +223,7 @@ export function MessagesView() {
         <section className="min-h-[22rem] space-y-3 rounded-[1.75rem] bg-white p-4 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-5" aria-label="Conversation">
           {messages.filter((message) => message.threadId === selectedId).length === 0 ? (
             <div className="px-3 py-16 text-center">
-              <p className="font-bold">Say hello</p>
+              <p className="font-bold">Message the host about this gig</p>
               <p className="mt-2 text-sm text-purple-gray">This is a 1:1 thread with the {thread.role === "host" ? "applicant" : "host"} for this gig.</p>
             </div>
           ) : (
@@ -262,7 +262,7 @@ export function MessagesView() {
     <div className="mx-auto max-w-2xl space-y-7">
       <header className="flex items-end justify-between gap-4">
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-purple">Stay in the loop</p>
+          <p className="text-sm font-semibold text-purple">Gig messages</p>
           <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Messages.</h1>
         </div>
         <button type="button" aria-label="New message" onClick={() => setComposerOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-full bg-black text-xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-purple">＋</button>

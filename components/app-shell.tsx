@@ -24,7 +24,7 @@ export function AppShell({ children }: AppShellProps) {
           <span className="grid size-8 place-items-center rounded-xl bg-black text-sm font-bold text-white">O</span>
           <span className="text-xl font-bold tracking-[-0.04em] text-black">offer</span>
         </Link>
-        <p className="mt-2 px-3 text-xs font-medium text-purple-gray">Find your people.</p>
+        <p className="mt-2 px-3 text-xs font-medium text-purple-gray">Volunteer first. Paid when you need it.</p>
         <nav className="mt-12 flex flex-col gap-1.5" aria-label="Primary">
           {navItems.map((item) => {
             const current = pathname === item.href;
@@ -76,8 +76,8 @@ export function AppShell({ children }: AppShellProps) {
                       current ? "text-black" : "text-purple-gray"
                     }`}
                   >
-                    <span className={`grid size-8 place-items-center rounded-full transition-all ${item.label === "Post" ? "-mt-5 size-14 border-4 border-lavender bg-purple text-white shadow-[0_10px_22px_rgba(142,82,255,0.32)]" : current ? "bg-black text-white" : "group-hover:bg-lavender"}`}>
-                      <NavIcon label={item.label} className={item.label === "Post" ? "size-6" : "size-[18px]"} />
+                    <span className={`grid size-8 place-items-center rounded-full transition-all ${item.label === "Post a Gig" ? "-mt-5 size-14 border-4 border-lavender bg-purple text-white shadow-[0_10px_22px_rgba(142,82,255,0.32)]" : current ? "bg-black text-white" : "group-hover:bg-lavender"}`}>
+                      <NavIcon label={item.label} className={item.label === "Post a Gig" ? "size-6" : "size-[18px]"} />
                     </span>
                     {item.label}
                   </Link>
