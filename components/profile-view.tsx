@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
+import { HolographicReferralCard } from "@/components/holographic-referral-card";
 import { useOffer } from "@/components/offer-provider";
 
 type ProfileTab = "About" | "Gigs";
@@ -35,6 +36,7 @@ export function ProfileView() {
   const [intent, setIntent] = useState<Intent>("both");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [gigsCompleted, setGigsCompleted] = useState<number | null>(null);
   const supabaseReady = isSupabaseConfigured();
   const displayName = user?.displayName ?? (source === "demo-adapter" ? "Mafia Slice" : "Guest");
   const handle = user?.email?.split("@")[0] ?? (source === "demo-adapter" ? "slice" : "guest");
@@ -42,6 +44,23 @@ export function ProfileView() {
   const bio = user?.bio?.trim() || (source === "demo-adapter" ? "" : "Add a display name after you sign in. Identity verification is not required.");
   const signedIn = Boolean(user) || source === "demo-adapter";
   const canEdit = Boolean(user) || source === "demo-adapter";
+
+  useEffect(() => {
+    let ignore = false;
+    void fetch("/api/my-gigs")
+      .then(async (response) => {
+        if (!response.ok) return;
+        const body = (await response.json()) as { data?: { joined?: { status?: string }[] } };
+        const completed = (body.data?.joined ?? []).filter((gig) => gig.status === "Completed").length;
+        if (!ignore) setGigsCompleted(completed);
+      })
+      .catch(() => {
+        if (!ignore) setGigsCompleted(null);
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   function startEditing() {
     setName(user?.displayName ?? (source === "demo-adapter" ? "Mafia Slice" : ""));
@@ -93,6 +112,8 @@ export function ProfileView() {
         <div className="mt-6"><h2 className="text-2xl font-bold tracking-[-0.04em]">{displayName}</h2><p className="mt-1 text-sm text-white/60">@{handle}</p>{bio ? <p className="mt-4 max-w-md text-sm leading-6 text-white/80">{bio}</p> : null}</div>
         <div className="mt-6 flex flex-wrap gap-2"><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Host</span><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Volunteer</span>{signedIn ? <span className="rounded-full bg-success/20 px-3 py-1.5 text-xs font-semibold text-[#a6ee91]">{user?.phone ? "Phone on file" : source === "demo-adapter" ? "Demo session" : "Signed in"}</span> : null}</div>
       </section>
+
+      <HolographicReferralCard name={displayName} gigsCompleted={gigsCompleted} />
 
       {editing ? (
         <form onSubmit={saveProfile} className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">

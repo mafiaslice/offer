@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { GigCard } from "@/components/gig-card";
+import { StarShowcase } from "@/components/star-showcase";
 import { useOffer } from "@/components/offer-provider";
 import type { GigListItem } from "@/lib/data/types";
 
@@ -51,6 +52,7 @@ export function DiscoverView({ initialGigs, loadError }: DiscoverViewProps) {
       {!liveEmpty && kind === "Volunteer" && topical.length > 0 ? <section className="space-y-4" aria-labelledby="volunteer-gigs-heading"><div className="flex items-center justify-between"><h2 id="volunteer-gigs-heading" className="text-xl font-bold tracking-[-0.04em]">Volunteer gigs</h2><span className="text-sm font-semibold text-purple-gray">{topical.length} available</span></div><div className="grid gap-5 md:grid-cols-2">{topical.map((gig) => <GigCard key={gig.slug} href={`/gigs/${gig.slug}`} {...gig} />)}</div></section> : null}
       {!liveEmpty && kind === "Paid gig" && paid.length > 0 ? <section className="space-y-4" aria-labelledby="paid-gigs-heading"><div className="flex items-center justify-between"><h2 id="paid-gigs-heading" className="text-xl font-bold tracking-[-0.04em]">Paid gigs</h2><span className="text-sm font-semibold text-purple-gray">{paid.length} available</span></div><div className="grid gap-5 md:grid-cols-2">{paid.map((gig) => <GigCard key={gig.slug} href={`/gigs/${gig.slug}`} {...gig} />)}</div></section> : null}
       {!liveEmpty && filtered.length === 0 ? <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center"><p className="text-base font-bold">No gigs match that search</p><p className="mt-2 text-sm leading-6 text-purple-gray">Try another place, category, or gig type.</p><button type="button" onClick={() => { setQuery(""); setCategory("All gigs"); setKind("Volunteer"); }} className="mt-5 min-h-11 rounded-full bg-black px-5 text-sm font-bold text-white">Clear filters</button></div> : null}
+      <StarShowcase />
       <button type="button" className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-4 text-sm font-bold text-black shadow-[0_10px_24px_rgba(53,32,79,0.08)] transition-colors hover:bg-black hover:text-white"><span aria-hidden>⌖</span> Explore gigs on the map</button>
     </div>
   );
