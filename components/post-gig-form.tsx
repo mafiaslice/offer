@@ -81,14 +81,14 @@ export function PostGigForm() {
       <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
         <div className="mb-5 flex rounded-2xl bg-lavender p-1.5">
           {(["volunteer", "paid"] as const).map((option) => (
-            <button key={option} type="button" onClick={() => setKind(option)} className={`min-h-11 flex-1 rounded-xl text-sm font-bold capitalize transition-all ${kind === option ? "bg-black text-white shadow-sm" : "text-purple-gray hover:text-black"}`}>
-              {option} gig
+            <button key={option} type="button" onClick={() => setKind(option)} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-all ${kind === option ? "bg-black text-white shadow-sm" : "text-purple-gray hover:text-black"}`}>
+              {option === "volunteer" ? "Volunteer gig" : "Paid gig"}
             </button>
           ))}
         </div>
         <div className="rounded-2xl bg-lavender p-4">
-          <p className="text-sm font-bold text-black">{kind === "volunteer" ? "Volunteer first" : "A paid opportunity"}</p>
-          <p className="mt-1 text-xs leading-5 text-purple-gray">{kind === "volunteer" ? "People are showing up because they believe in what you’re making. Be clear about the experience and any support you can provide." : "Be clear about the work, time commitment, and payment. Paid gigs will be surfaced after volunteer opportunities."}</p>
+          <p className="text-sm font-bold text-black">{kind === "volunteer" ? "What do you need volunteers for?" : "A paid opportunity"}</p>
+          <p className="mt-1 text-xs leading-5 text-purple-gray">{kind === "volunteer" ? "Volunteers give their time. Be clear about the role, the shift, the incentives and the dress code." : "Be clear about the work, time commitment, and payment. Paid gigs will be surfaced after volunteer opportunities."}</p>
         </div>
       </section>
 

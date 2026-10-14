@@ -1,5 +1,5 @@
 type NavIconProps = {
-  label: "Discover" | "My Gigs" | "Messages" | "Profile" | "Post";
+  label: "Discover" | "My Gigs" | "Messages" | "Profile" | "Post a Gig";
   className?: string;
 };
 
@@ -43,7 +43,7 @@ export function NavIcon({ label, className }: NavIconProps) {
           <path d="M5 19c1.4-3.2 3.6-4.8 7-4.8s5.6 1.6 7 4.8" />
         </svg>
       );
-    case "Post":
+    case "Post a Gig":
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="8" />

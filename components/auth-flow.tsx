@@ -310,13 +310,10 @@ export function AuthFlow() {
             <div className="space-y-3">
               <p className="text-sm font-bold">I&apos;m here to...</p>
               <div className="space-y-2">
-                {([["need", "Find trusted hands", "I have a project or gig to fill"], ["help", "Show up and help", "I want to join gigs and meet people"], ["both", "Both", "I want to do both"]] as const).map(([value, title, description]) => (
+                {([["help", "I want to volunteer on gigs"], ["need", "I host gigs and need volunteers"], ["both", "Both"]] as const).map(([value, title]) => (
                   <button key={value} type="button" onClick={() => setRole(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${role === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
                     <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${role === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{role === value ? "✓" : null}</span>
-                    <span>
-                      <strong className="block text-sm font-bold">{title}</strong>
-                      <span className="mt-0.5 block text-xs text-purple-gray">{description}</span>
-                    </span>
+                    <strong className="block text-sm font-bold">{title}</strong>
                   </button>
                 ))}
               </div>

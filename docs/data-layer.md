@@ -48,7 +48,7 @@ npm run seed:demo
 psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
 ```
 
-This is **opt-in** and is not required for build. Seeded rows include roles (with descriptions), slots, and a fuller summary so gig detail feels real. When Supabase env is set and the database has no open gigs, Discover shows an empty state with a Post CTA — it does not fall back to the demo catalog.
+This is **opt-in** and is not required for build. Seeded rows include roles (with descriptions), slots, and a fuller summary so gig detail feels real. When Supabase env is set and the database has no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button — it does not fall back to the demo catalog.
 
 Do not commit `.env.local`. The app uses anon + RLS. `SUPABASE_SERVICE_ROLE_KEY` is unused by the Next.js app (optional for the seed script only).
 

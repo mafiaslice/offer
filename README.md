@@ -41,7 +41,7 @@ Payments, SMS, and identity verification are **not** implemented. In-app Host↔
 
 ## Local with Supabase
 
-Without credentials the app uses the demo adapter (`meta.source: "demo-adapter"`) and Discover shows in-repo fixtures. When Supabase env is set, Discover reads Postgres only — an empty database shows a **No gigs yet** state with a Post CTA, not the demo catalog.
+Without credentials the app uses the demo adapter (`meta.source: "demo-adapter"`) and Discover shows in-repo fixtures. When Supabase env is set, Discover reads Postgres only — an empty database shows **Be the first to post a volunteer gig.** with a Post a Gig button, not the demo catalog.
 
 1. Create a Supabase project and run the SQL in `supabase/migrations/` (schema, message threads, and check-ins).
 2. Enable Email auth. Add `http://localhost:3000/auth/callback` as a redirect URL.

@@ -23,11 +23,11 @@ Copy `.env.example` to `.env.local`, set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PU
 npm run seed:demo
 ```
 
-Discover reads **Postgres only** when env is set. An empty database shows **No gigs yet**, not the demo catalog.
+Discover reads **Postgres only** when env is set. An empty database shows **Be the first to post a volunteer gig.**, not the demo catalog.
 
 ## Click path
 
-1. **Discover** — volunteer gigs first, then paid gigs. Cards show host, place, time, and spots. **View details** opens `/gigs/[slug]`.
+1. **Discover** — **Volunteer Gigs** is the default tab and lists volunteer gigs only. **Paid Gigs** lists paid gigs only. Cards show host, place, time, and spots. **View details** opens `/gigs/[slug]`.
 2. **Gig detail** — title, host, place, time, about/summary, roles, slots/spots, join/apply CTA. Missing fields show empty copy, not a Next error overlay. A stale slug shows “This gig isn't available”.
 3. **Apply / join**
    - Signed in: pick a role, send. Success offers **My gigs** and **Message host**.

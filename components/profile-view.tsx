@@ -20,9 +20,9 @@ const settings = [
 ];
 
 const intentOptions = [
-  ["need", "Find trusted hands", "I have a project or gig to fill"],
-  ["help", "Show up and help", "I want to join gigs and meet people"],
-  ["both", "Both", "I want to do both"],
+  ["help", "I want to volunteer on gigs"],
+  ["need", "I host gigs and need volunteers"],
+  ["both", "Both"],
 ] as const;
 
 export function ProfileView() {
@@ -39,13 +39,13 @@ export function ProfileView() {
   const displayName = user?.displayName ?? (source === "demo-adapter" ? "Mafia Slice" : "Guest");
   const handle = user?.email?.split("@")[0] ?? (source === "demo-adapter" ? "slice" : "guest");
   const initials = user?.initials ?? (source === "demo-adapter" ? "MS" : "G");
-  const bio = user?.bio ?? (source === "demo-adapter" ? "Building spaces where good people can meet, help, and make things happen." : "Add a display name after you sign in. Identity verification is not required.");
+  const bio = user?.bio?.trim() || (source === "demo-adapter" ? "" : "Add a display name after you sign in. Identity verification is not required.");
   const signedIn = Boolean(user) || source === "demo-adapter";
   const canEdit = Boolean(user) || source === "demo-adapter";
 
   function startEditing() {
     setName(user?.displayName ?? (source === "demo-adapter" ? "Mafia Slice" : ""));
-    setBioDraft(user?.bio ?? (source === "demo-adapter" ? "Building spaces where good people can meet, help, and make things happen." : ""));
+    setBioDraft(user?.bio ?? "");
     setIntent(user?.intent ?? "both");
     setError("");
     setEditing(true);
@@ -90,7 +90,7 @@ export function ProfileView() {
             <button type="button" onClick={startEditing} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-black">Edit profile</button>
           ) : null}
         </div>
-        <div className="mt-6"><h2 className="text-2xl font-bold tracking-[-0.04em]">{displayName}</h2><p className="mt-1 text-sm text-white/60">@{handle}</p><p className="mt-4 max-w-md text-sm leading-6 text-white/80">{bio}</p></div>
+        <div className="mt-6"><h2 className="text-2xl font-bold tracking-[-0.04em]">{displayName}</h2><p className="mt-1 text-sm text-white/60">@{handle}</p>{bio ? <p className="mt-4 max-w-md text-sm leading-6 text-white/80">{bio}</p> : null}</div>
         <div className="mt-6 flex flex-wrap gap-2"><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Host</span><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Volunteer</span>{signedIn ? <span className="rounded-full bg-success/20 px-3 py-1.5 text-xs font-semibold text-[#a6ee91]">{user?.phone ? "Phone on file" : source === "demo-adapter" ? "Demo session" : "Signed in"}</span> : null}</div>
       </section>
 
@@ -115,13 +115,10 @@ export function ProfileView() {
           <div className="space-y-3">
             <p className="text-sm font-bold">I&apos;m here to...</p>
             <div className="space-y-2">
-              {intentOptions.map(([value, title, description]) => (
+              {intentOptions.map(([value, title]) => (
                 <button key={value} type="button" onClick={() => setIntent(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${intent === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
                   <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${intent === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{intent === value ? "✓" : null}</span>
-                  <span>
-                    <strong className="block text-sm font-bold">{title}</strong>
-                    <span className="mt-0.5 block text-xs text-purple-gray">{description}</span>
-                  </span>
+                  <strong className="block text-sm font-bold">{title}</strong>
                 </button>
               ))}
             </div>
@@ -135,7 +132,7 @@ export function ProfileView() {
 
       <div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs joined</p></div><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs hosted</p></div></div>
 
-      <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7"><div className="flex rounded-2xl bg-lavender p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-black text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-black text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5"><div><h2 className="text-lg font-bold tracking-[-0.03em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div><div className="rounded-2xl bg-lavender p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-lavender p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><span className="text-purple">↗</span></Link></div>}</section>
+      <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7"><div className="flex rounded-2xl bg-lavender p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-black text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-black text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-bold tracking-[-0.03em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-lavender p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-lavender p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><span className="text-purple">↗</span></Link></div>}</section>
 
       <section className="space-y-3"><h2 className="px-1 text-lg font-bold tracking-[-0.03em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-black/5 px-4 text-left last:border-0 hover:bg-lavender"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><span className="text-lg text-purple-gray">{icon}</span></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-lavender"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><span className="text-lg text-purple-gray">↗</span></button> : null}</div></section>
     </div>
