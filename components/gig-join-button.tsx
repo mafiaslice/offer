@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
+import { StatusButton, type StatusButtonState } from "@/components/save-button";
 import { useOffer } from "@/components/offer-provider";
 
 type GigJoinButtonProps = {
@@ -27,7 +28,9 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
   const needsSignIn = source === "supabase" && ready && !user;
   const checkingSession = source === "supabase" && !ready;
   const applied = sent || hasApplied(slug);
-  const ctaLabel = applied ? "Application sent" : volunteer ? "Join this gig" : "Apply for this gig";
+  const joinStatus: StatusButtonState = busy ? "loading" : applied ? "success" : checkingSession ? "loading" : "idle";
+  const idleLabel = volunteer ? "Join this gig" : "Apply for this gig";
+  const submitIdleLabel = "Send application";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,14 +77,15 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
   return (
     <>
       <div className="sticky bottom-3 z-10 rounded-2xl bg-black p-2 shadow-[0_16px_32px_rgba(0,0,0,0.2)]">
-        <button
-          type="button"
+        <StatusButton
+          status={joinStatus}
+          idleLabel={idleLabel}
+          loadingLabel={checkingSession && !busy ? "Checking your session…" : "Sending"}
+          successLabel="Application sent"
           disabled={checkingSession}
           onClick={() => setOpen(true)}
-          className="flex min-h-12 w-full items-center justify-center rounded-xl bg-purple px-5 text-sm font-bold text-white transition-colors hover:bg-white hover:text-black disabled:opacity-60"
-        >
-          {checkingSession ? "Checking your session…" : ctaLabel}
-        </button>
+          className="rounded-xl bg-purple hover:bg-white hover:text-black"
+        />
       </div>
 
       {open ? (
@@ -95,49 +99,57 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
               </div>
               <button type="button" onClick={() => setOpen(false)} className="grid size-10 place-items-center rounded-full bg-lavender text-lg" aria-label="Close">×</button>
             </div>
-            {applied ? (
-              <div className="mt-6 rounded-2xl bg-success/15 p-4">
-                <p className="text-sm font-bold text-[#328e1c]">Application sent.</p>
-                <p className="mt-1 text-sm leading-6 text-[#328e1c]/80">The host can now review your profile. Message them when you want a 1:1 thread for this gig.</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link href="/my-gigs" className="flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">My gigs</Link>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void ensureThread({ gigSlug: slug }).then((result) => {
-                        if (result.ok && result.thread) {
-                          setOpen(false);
-                          router.push(`/messages?thread=${result.thread.id}`);
-                          return;
-                        }
-                        if (result.status === 401) router.push(signInHref(`/gigs/${slug}`));
-                      });
-                    }}
-                    className="min-h-11 rounded-full bg-lavender px-5 text-sm font-bold text-black"
-                  >
-                    Message host
-                  </button>
+            <form onSubmit={submit} className="mt-6 flex flex-col gap-5">
+              {applied ? (
+                <div className="rounded-2xl bg-success/15 p-4">
+                  <p className="text-sm font-bold text-[#328e1c]">Application sent.</p>
+                  <p className="mt-1 text-sm leading-6 text-[#328e1c]/80">The host can now review your profile. Message them when you want a 1:1 thread for this gig.</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link href="/my-gigs" className="flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">My gigs</Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void ensureThread({ gigSlug: slug }).then((result) => {
+                          if (result.ok && result.thread) {
+                            setOpen(false);
+                            router.push(`/messages?thread=${result.thread.id}`);
+                            return;
+                          }
+                          if (result.status === 401) router.push(signInHref(`/gigs/${slug}`));
+                        });
+                      }}
+                      className="min-h-11 rounded-full bg-lavender px-5 text-sm font-bold text-black"
+                    >
+                      Message host
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <form onSubmit={submit} className="mt-6 space-y-5">
-                {error ? <p className="rounded-2xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p> : null}
-                <label className="block space-y-2">
-                  <span className="text-sm font-bold">Which role interests you?</span>
-                  <select value={role} onChange={(event) => setRole(event.target.value)} className="min-h-13 w-full rounded-2xl border border-black/10 bg-lavender px-4 text-sm font-semibold outline-none focus:border-purple focus:ring-4 focus:ring-purple/10">
-                    {(roles.length > 0 ? roles : ["General support"]).map((item) => <option key={item}>{item}</option>)}
-                  </select>
-                </label>
-                <label className="block space-y-2">
-                  <span className="text-sm font-bold">Add a note <span className="font-normal text-purple-gray">(optional)</span></span>
-                  <textarea value={note} onChange={(event) => setNote(event.target.value)} className="min-h-28 w-full resize-none rounded-2xl border border-black/10 bg-lavender px-4 py-3 text-sm outline-none placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10" placeholder="Anything the host should know?" />
-                </label>
-                <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
-                  {busy ? "Sending…" : "Send application"}
-                </button>
-                <p className="text-center text-xs leading-5 text-purple-gray">Your profile will be visible to the host. Offer does not take payment.</p>
-              </form>
-            )}
+              ) : (
+                <>
+                  {error ? <p className="rounded-2xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p> : null}
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-bold">Which role interests you?</span>
+                    <select value={role} onChange={(event) => setRole(event.target.value)} className="min-h-13 w-full rounded-2xl border border-black/10 bg-lavender px-4 text-sm font-semibold outline-none focus:border-purple focus:ring-4 focus:ring-purple/10">
+                      {(roles.length > 0 ? roles : ["General support"]).map((item) => <option key={item}>{item}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-bold">Add a note <span className="font-normal text-purple-gray">(optional)</span></span>
+                    <textarea value={note} onChange={(event) => setNote(event.target.value)} className="min-h-28 w-full resize-none rounded-2xl border border-black/10 bg-lavender px-4 py-3 text-sm outline-none placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10" placeholder="Anything the host should know?" />
+                  </label>
+                </>
+              )}
+              <StatusButton
+                type="submit"
+                status={busy ? "loading" : applied ? "success" : "idle"}
+                idleLabel={submitIdleLabel}
+                loadingLabel="Sending"
+                successLabel="Sent"
+                disabled={applied}
+                className="min-h-13"
+              />
+              {applied ? null : <p className="text-center text-xs leading-5 text-purple-gray">Your profile will be visible to the host. Offer does not take payment.</p>}
+            </form>
           </section>
         </div>
       ) : null}
