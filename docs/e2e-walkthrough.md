@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). `/` redirects to `/discover`.
+Open [http://localhost:3000/discover](http://localhost:3000/discover). `/` is the landing page. The app click path starts at Discover.
 
 ### Without Supabase env
 

@@ -14,6 +14,8 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
 
+  if (pathname === "/") return children;
+
   return (
     <OfferProvider>
       <div className="min-h-dvh overflow-x-hidden bg-lavender">
@@ -39,7 +41,7 @@ export function AppShell({ children }: AppShellProps) {
                     : "text-purple-gray hover:bg-white hover:text-black"
                 }`}
               >
-                <NavIcon label={item.label} className="size-5" />
+                <NavIcon label={item.label} active={current} className="size-5" />
                 {item.label}
               </Link>
             );
@@ -77,7 +79,7 @@ export function AppShell({ children }: AppShellProps) {
                     }`}
                   >
                     <span className={`grid size-8 place-items-center rounded-full transition-all ${item.label === "Post a Gig" ? "-mt-5 size-14 border-4 border-lavender bg-purple text-white shadow-[0_10px_22px_rgba(142,82,255,0.32)]" : current ? "bg-black text-white" : "group-hover:bg-lavender"}`}>
-                      <NavIcon label={item.label} className={item.label === "Post a Gig" ? "size-6" : "size-[18px]"} />
+                      <NavIcon label={item.label} active={current} className={item.label === "Post a Gig" ? "size-6" : "size-[18px]"} />
                     </span>
                     {item.label}
                   </Link>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
+import { Icon } from "@/components/icon";
 import { StatusButton, type StatusButtonState } from "@/components/save-button";
 import { useOffer } from "@/components/offer-provider";
 
@@ -97,7 +98,7 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
                 <p className="text-sm font-semibold text-purple">{volunteer ? "You're almost in" : "Apply to join"}</p>
                 <h2 id="join-gig-title" className="mt-1 text-2xl font-bold tracking-[-0.05em]">Tell the host about you.</h2>
               </div>
-              <button type="button" onClick={() => setOpen(false)} className="grid size-10 place-items-center rounded-full bg-lavender text-lg" aria-label="Close">×</button>
+              <button type="button" onClick={() => setOpen(false)} className="grid size-10 place-items-center rounded-full bg-lavender text-lg" aria-label="Close"><Icon name="x" className="size-5" /></button>
             </div>
             <form onSubmit={submit} className="mt-6 flex flex-col gap-5">
               {applied ? (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/icon";
 import { toneGradient } from "@/lib/data/format";
 
 type GigCardProps = {
@@ -45,10 +46,10 @@ export function GigCard({
           <Link href={href} className="text-lg font-bold leading-tight tracking-[-0.03em] text-black sm:text-xl">
             {title}
           </Link>
-          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-lavender text-purple" aria-hidden>↗</span>
+          <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-lavender text-purple" aria-hidden><Icon name="arrow-up-right" className="size-4" /></span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-purple-gray">
-          <span>⌖ {locationLabel || "Place TBA"}</span>
+          <span className="inline-flex items-center gap-1"><Icon name="map-pin" className="size-4" />{locationLabel || "Place TBA"}</span>
           <span>•</span>
           <span>Host · {hostName || "Host"}</span>
         </div>

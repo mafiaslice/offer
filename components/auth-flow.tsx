@@ -6,6 +6,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { authIntentCopy, safeNextPath } from "@/lib/auth";
 import { isSmsAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/icon";
 import { useOffer } from "@/components/offer-provider";
 import type { SessionProfile } from "@/lib/data/types";
 
@@ -163,7 +164,7 @@ export function AuthFlow() {
     return (
       <main className="flex min-h-[calc(100dvh-7rem)] items-center justify-center">
         <section className="w-full max-w-md rounded-[2rem] bg-white p-7 text-center shadow-[0_18px_42px_rgba(53,32,79,0.1)] sm:p-10">
-          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/15 text-2xl text-[#37951a]">✓</span>
+          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/15 text-2xl text-[#37951a]"><Icon name="check" className="size-7" /></span>
           <h1 className="mt-6 text-3xl font-bold tracking-[-0.06em]">You&apos;re in.</h1>
           <p className="mt-3 text-sm leading-6 text-purple-gray">
             {supabaseReady
@@ -221,7 +222,7 @@ export function AuthFlow() {
       {step === "phone" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <button type="button" onClick={() => setStep("email")} className="text-sm font-bold text-purple">← Use email</button>
+            <button type="button" onClick={() => setStep("email")} className="inline-flex items-center gap-1.5 text-sm font-bold text-purple"><Icon name="arrow-left" className="size-4" /> Use email</button>
             <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Your number,<br />your people.</h1>
             <p className="text-sm leading-6 text-purple-gray">Phone sign-in is optional. Email OTP is the reliable v1 path.</p>
           </header>
@@ -249,8 +250,8 @@ export function AuthFlow() {
       {step === "otp" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <button type="button" onClick={() => setStep(channel === "phone" ? "phone" : "email")} className="text-sm font-bold text-purple">
-              ← Change {channel === "phone" ? "number" : "email"}
+            <button type="button" onClick={() => setStep(channel === "phone" ? "phone" : "email")} className="inline-flex items-center gap-1.5 text-sm font-bold text-purple">
+              <Icon name="arrow-left" className="size-4" /> Change {channel === "phone" ? "number" : "email"}
             </button>
             <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Check your<br />messages.</h1>
             <p className="text-sm leading-6 text-purple-gray">
@@ -312,7 +313,7 @@ export function AuthFlow() {
               <div className="space-y-2">
                 {([["help", "I want to volunteer on gigs"], ["need", "I host gigs and need volunteers"], ["both", "Both"]] as const).map(([value, title]) => (
                   <button key={value} type="button" onClick={() => setRole(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${role === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
-                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${role === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{role === value ? "✓" : null}</span>
+                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${role === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{role === value ? <Icon name="check" className="size-3" /> : null}</span>
                     <strong className="block text-sm font-bold">{title}</strong>
                   </button>
                 ))}

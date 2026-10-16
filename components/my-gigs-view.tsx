@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
 import { GigCheckInPanel } from "@/components/gig-check-in-panel";
+import { Icon } from "@/components/icon";
 import type { EnsureThreadInput, HostApplicant, MyGigCard } from "@/lib/data/types";
 
 type GigStatus = "Upcoming" | "Completed";
@@ -37,7 +38,7 @@ function MyGigCardView({
       <Link href={`/gigs/${gig.slug}`} className="group flex gap-3 p-3 transition-transform hover:-translate-y-0.5 sm:gap-4 sm:p-4">
         <div className={`relative h-28 w-28 shrink-0 rounded-2xl bg-gradient-to-br ${toneClass(gig.imageTone)} sm:h-32 sm:w-32`}><span className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-1 text-[9px] font-bold text-black">{gig.kindLabel}</span></div>
         <div className="min-w-0 flex-1 py-1">
-          <div className="flex items-start justify-between gap-2"><h2 className="line-clamp-2 text-base font-bold leading-tight tracking-[-0.03em] sm:text-lg">{gig.title}</h2><span className="text-lg text-purple">↗</span></div>
+          <div className="flex items-start justify-between gap-2"><h2 className="line-clamp-2 text-base font-bold leading-tight tracking-[-0.03em] sm:text-lg">{gig.title}</h2><span className="text-purple"><Icon name="arrow-up-right" className="size-5" /></span></div>
           <p className="mt-2 text-xs font-semibold text-purple-gray">{gig.mode} · {gig.hostName}</p>
           <p className="mt-1 text-xs text-purple-gray">{gig.dateLabel} · {gig.locationLabel}</p>
           <span className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${applicationStatus ? "bg-purple/10 text-purple" : gig.status === "Upcoming" ? "bg-purple/10 text-purple" : "bg-success/15 text-[#37951a]"}`}>{applicationStatus ?? gig.status}</span>

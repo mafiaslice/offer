@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Icon } from "@/components/icon";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
@@ -179,7 +180,7 @@ export function MessagesView() {
       return (
         <div className="mx-auto max-w-2xl space-y-5">
           <header className="flex items-center gap-3">
-            <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages">←</button>
+            <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages"><Icon name="arrow-left" className="size-5" /></button>
             <h1 className="text-lg font-bold tracking-[-0.04em]">Sign in to message</h1>
           </header>
           <div className="rounded-[1.5rem] border border-dashed border-black/15 bg-white px-5 py-12 text-center">
@@ -195,7 +196,7 @@ export function MessagesView() {
       return (
         <div className="mx-auto max-w-2xl space-y-5">
           <header className="flex items-center gap-3">
-            <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages">←</button>
+            <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Back to messages"><Icon name="arrow-left" className="size-5" /></button>
             <h1 className="text-lg font-bold tracking-[-0.04em]">{error || loading ? (error || "Loading conversation…") : "Loading conversation…"}</h1>
           </header>
           {error ? (
@@ -211,7 +212,7 @@ export function MessagesView() {
     return (
       <div className="mx-auto flex max-w-2xl flex-col gap-5">
         <header className="flex items-center gap-3">
-          <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm transition-colors hover:bg-black hover:text-white" aria-label="Back to messages">←</button>
+          <button type="button" onClick={closeThread} className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl shadow-sm transition-colors hover:bg-black hover:text-white" aria-label="Back to messages"><Icon name="arrow-left" className="size-5" /></button>
           <span className={`grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br ${thread.tone} text-xs font-bold text-white`}>{thread.counterpartInitials}</span>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-lg font-bold tracking-[-0.04em]">{thread.counterpartName}</h1>
@@ -265,7 +266,7 @@ export function MessagesView() {
           <p className="text-sm font-semibold text-purple">Gig messages</p>
           <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Messages.</h1>
         </div>
-        <button type="button" aria-label="New message" onClick={() => setComposerOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-full bg-black text-xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-purple">＋</button>
+        <button type="button" aria-label="New message" onClick={() => setComposerOpen(true)} className="grid size-11 shrink-0 place-items-center rounded-full bg-black text-xl text-white shadow-lg shadow-black/10 transition-colors hover:bg-purple"><Icon name="plus" className="size-5" /></button>
       </header>
 
       {unauthorized ? (
@@ -279,7 +280,7 @@ export function MessagesView() {
       {!unauthorized ? (
         <>
           <label className="flex min-h-12 items-center gap-3 rounded-full border border-black/5 bg-white px-4 shadow-sm focus-within:border-purple focus-within:ring-4 focus-within:ring-purple/10">
-            <svg className="size-5 shrink-0 text-purple-gray" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+            <Icon name="search" className="size-5 shrink-0 text-purple-gray" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} aria-label="Search messages" placeholder="Search messages" className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-purple-gray/70" />
           </label>
 
@@ -308,7 +309,7 @@ export function MessagesView() {
                       <span className="mt-0.5 block truncate text-xs font-semibold text-purple">{thread.gigTitle}</span>
                       <span className={`mt-1 block truncate text-xs ${thread.unread ? "font-semibold text-black" : "text-purple-gray"}`}>{thread.preview}</span>
                     </span>
-                    {thread.unread > 0 ? <span className="grid size-6 shrink-0 place-items-center rounded-full bg-purple text-[10px] font-bold text-white">{thread.unread}</span> : <span className="text-sm text-purple-gray">›</span>}
+                    {thread.unread > 0 ? <span className="grid size-6 shrink-0 place-items-center rounded-full bg-purple text-[10px] font-bold text-white">{thread.unread}</span> : <Icon name="chevron-right" className="size-4 shrink-0 text-purple-gray" />}
                   </button>
                 ))
               ) : (
@@ -340,7 +341,7 @@ export function MessagesView() {
                 <p className="text-sm font-semibold text-purple">New message</p>
                 <h2 id="new-message-title" className="mt-1 text-2xl font-bold tracking-[-0.05em]">Start a gig thread.</h2>
               </div>
-              <button type="button" onClick={() => setComposerOpen(false)} className="grid size-10 place-items-center rounded-full bg-lavender text-lg" aria-label="Close">×</button>
+              <button type="button" onClick={() => setComposerOpen(false)} className="grid size-10 place-items-center rounded-full bg-lavender text-lg" aria-label="Close"><Icon name="x" className="size-5" /></button>
             </div>
             {startable.length > 0 ? (
               <div className="mt-5 space-y-2">

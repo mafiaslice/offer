@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
+import { Icon } from "@/components/icon";
 import { MultiStepForm, type MultiStep } from "@/components/multi-step-form";
 
 type GigKind = "volunteer" | "paid";
@@ -253,7 +254,7 @@ export function PostGigForm() {
             </div>
             <Field label="Place">
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-purple-gray">⌖</span>
+                <Icon name="map-pin" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-purple-gray" />
                 <input name="locationLabel" value={locationLabel} onChange={(event) => setLocationLabel(event.target.value)} className={`${inputClass} pl-10`} placeholder="Search for a place or add an address" required />
               </div>
             </Field>
@@ -295,7 +296,7 @@ export function PostGigForm() {
                     className="grid size-12 shrink-0 place-items-center rounded-2xl border border-black/10 text-lg text-purple-gray transition-colors hover:border-error hover:text-error"
                     aria-label={`Remove role ${index + 1}`}
                   >
-                    ×
+                    <Icon name="x" className="size-5" />
                   </button>
                 </div>
               ))}
@@ -321,7 +322,7 @@ export function PostGigForm() {
               <textarea name="instructions" value={instructions} onChange={(event) => setInstructions(event.target.value)} className={`${inputClass} min-h-28 resize-none py-3`} placeholder="Dress code, arrival time, what to bring..." />
             </Field>
             <button type="button" className="flex min-h-28 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-lavender text-center transition-colors hover:border-purple">
-              <span className="text-2xl text-purple">＋</span>
+              <Icon name="image-plus" className="size-6 text-purple" />
               <span className="mt-1 text-sm font-bold">Add photos or a cover</span>
               <span className="mt-1 text-xs text-purple-gray">Show people what they&apos;re joining</span>
             </button>

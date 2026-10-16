@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
+import { Icon, type IconName } from "@/components/icon";
 import { HolographicReferralCard } from "@/components/holographic-referral-card";
 import { useOffer } from "@/components/offer-provider";
 
@@ -14,10 +15,10 @@ type Intent = "need" | "help" | "both";
 
 const inputClass = "min-h-13 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-medium text-black outline-none transition placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10";
 
-const settings = [
-  ["Personal details", "Name and a short bio hosts can see", "↗"],
-  ["Safety and verification", "Identity verification is not in this version", "—"],
-  ["Notifications", "Choose what Offer sends you — still open", "›"],
+const settings: Array<[string, string, IconName]> = [
+  ["Personal details", "Name and a short bio hosts can see", "arrow-up-right"],
+  ["Safety and verification", "Identity verification is not in this version", "minus"],
+  ["Notifications", "Choose what Offer sends you — still open", "chevron-right"],
 ];
 
 const intentOptions = [
@@ -98,7 +99,7 @@ export function ProfileView() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header className="flex items-center justify-between"><div><p className="text-sm font-semibold text-purple">Your Offer profile</p><h1 className="mt-2 text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Profile.</h1></div><button type="button" className="grid size-11 place-items-center rounded-full bg-white text-lg shadow-sm" aria-label="Profile settings">⚙</button></header>
+      <header className="flex items-center justify-between"><div><p className="text-sm font-semibold text-purple">Your Offer profile</p><h1 className="mt-2 text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Profile.</h1></div><button type="button" className="grid size-11 place-items-center rounded-full bg-white text-lg shadow-sm" aria-label="Profile settings"><Icon name="settings" className="size-5" /></button></header>
 
       <section className="overflow-hidden rounded-[1.75rem] bg-black p-5 text-white shadow-[0_16px_36px_rgba(0,0,0,0.16)] sm:p-7">
         <div className="flex items-start justify-between gap-4">
@@ -138,7 +139,7 @@ export function ProfileView() {
             <div className="space-y-2">
               {intentOptions.map(([value, title]) => (
                 <button key={value} type="button" onClick={() => setIntent(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${intent === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
-                  <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${intent === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{intent === value ? "✓" : null}</span>
+                  <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${intent === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{intent === value ? <Icon name="check" className="size-3" /> : null}</span>
                   <strong className="block text-sm font-bold">{title}</strong>
                 </button>
               ))}
@@ -153,9 +154,9 @@ export function ProfileView() {
 
       <div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs joined</p></div><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs hosted</p></div></div>
 
-      <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7"><div className="flex rounded-2xl bg-lavender p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-black text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-black text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-bold tracking-[-0.03em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-lavender p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-lavender p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><span className="text-purple">↗</span></Link></div>}</section>
+      <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7"><div className="flex rounded-2xl bg-lavender p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-black text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-black text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-bold tracking-[-0.03em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-lavender p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-lavender p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><Icon name="arrow-up-right" className="size-5 text-purple" /></Link></div>}</section>
 
-      <section className="space-y-3"><h2 className="px-1 text-lg font-bold tracking-[-0.03em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-black/5 px-4 text-left last:border-0 hover:bg-lavender"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><span className="text-lg text-purple-gray">{icon}</span></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-lavender"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><span className="text-lg text-purple-gray">↗</span></button> : null}</div></section>
+      <section className="space-y-3"><h2 className="px-1 text-lg font-bold tracking-[-0.03em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-black/5 px-4 text-left last:border-0 hover:bg-lavender"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><Icon name={icon} className="size-5 shrink-0 text-purple-gray" /></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-lavender"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><Icon name={user ? "log-out" : "log-in"} className="size-5 shrink-0 text-purple-gray" /></button> : null}</div></section>
     </div>
   );
 }

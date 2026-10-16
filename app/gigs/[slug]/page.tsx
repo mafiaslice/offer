@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EmptyState } from "@/components/empty-state";
+import { Icon } from "@/components/icon";
 import { GigJoinButton } from "@/components/gig-join-button";
 import { GigCheckInPanel } from "@/components/gig-check-in-panel";
 import { errorMessage, getCheckInContext, getGigBySlug } from "@/lib/data";
@@ -46,7 +47,7 @@ function GigUnavailable({
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-5">
       <Link href="/discover" className="grid size-11 place-items-center rounded-full bg-white text-xl shadow-sm transition-colors hover:bg-black hover:text-white" aria-label="Back to discover">
-        ←
+        <Icon name="arrow-left" className="size-5" />
       </Link>
       <EmptyState title={title} body={body} href="/discover" action="Back to Discover" />
     </div>
@@ -99,10 +100,10 @@ export default async function GigDetailsPage({
   return (
     <div className="mx-auto max-w-2xl space-y-5 pb-5">
       <div className="flex items-center justify-between">
-        <Link href="/discover" className="grid size-11 place-items-center rounded-full bg-white text-xl shadow-sm transition-colors hover:bg-black hover:text-white" aria-label="Back to discover">←</Link>
+        <Link href="/discover" className="grid size-11 place-items-center rounded-full bg-white text-xl shadow-sm transition-colors hover:bg-black hover:text-white" aria-label="Back to discover"><Icon name="arrow-left" className="size-5" /></Link>
         <div className="flex gap-2">
-          <button type="button" className="grid size-11 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Save gig">♡</button>
-          <button type="button" className="grid size-11 place-items-center rounded-full bg-white text-lg shadow-sm" aria-label="Share gig">↗</button>
+          <button type="button" className="grid size-11 place-items-center rounded-full bg-white text-xl shadow-sm" aria-label="Save gig"><Icon name="heart" className="size-5" /></button>
+          <button type="button" className="grid size-11 place-items-center rounded-full bg-white text-lg shadow-sm" aria-label="Share gig"><Icon name="share-2" className="size-5" /></button>
         </div>
       </div>
 
@@ -121,9 +122,9 @@ export default async function GigDetailsPage({
         </div>
 
         <div className="grid gap-3 border-y border-black/5 py-5 sm:grid-cols-3">
-          <div className="flex gap-3"><span className="text-lg">◷</span><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">When</p><p className="mt-1 text-sm font-bold leading-snug">{when}</p></div></div>
-          <div className="flex gap-3"><span className="text-lg">⌖</span><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">Where</p><p className="mt-1 text-sm font-bold leading-snug">{place}</p></div></div>
-          <div className="flex gap-3"><span className="text-lg">♧</span><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">Availability</p><p className="mt-1 text-sm font-bold leading-snug">{spots}</p></div></div>
+          <div className="flex gap-3"><Icon name="clock" className="size-5 shrink-0" /><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">When</p><p className="mt-1 text-sm font-bold leading-snug">{when}</p></div></div>
+          <div className="flex gap-3"><Icon name="map-pin" className="size-5 shrink-0" /><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">Where</p><p className="mt-1 text-sm font-bold leading-snug">{place}</p></div></div>
+          <div className="flex gap-3"><Icon name="users" className="size-5 shrink-0" /><div><p className="text-[11px] font-semibold uppercase tracking-wide text-purple-gray">Availability</p><p className="mt-1 text-sm font-bold leading-snug">{spots}</p></div></div>
         </div>
 
         <div className="space-y-2">
@@ -162,7 +163,7 @@ export default async function GigDetailsPage({
             <ul className="space-y-3">
               {slots.map((slot, index) => (
                 <li key={slot.id ?? `${slot.startsAt}-${index}`} className="flex gap-3 rounded-2xl border border-black/5 p-4">
-                  <span className="text-lg">◷</span>
+                  <Icon name="clock" className="size-5 shrink-0" />
                   <div>
                     <p className="text-sm font-bold leading-snug">{slot.timeLabel}</p>
                     <p className="mt-1 text-xs font-semibold text-purple-gray">
@@ -193,7 +194,7 @@ export default async function GigDetailsPage({
         ) : null}
 
         <div className="flex h-36 items-end rounded-2xl bg-[radial-gradient(circle_at_30%_20%,rgba(142,82,255,0.15),transparent_45%),linear-gradient(135deg,#eef0f8,#e6e0f5)] p-4">
-          <span className="rounded-full bg-white px-3 py-2 text-xs font-bold text-black shadow-sm">⌖ {place}</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-bold text-black shadow-sm"><Icon name="map-pin" className="size-4" />{place}</span>
         </div>
       </section>
 
