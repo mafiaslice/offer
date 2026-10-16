@@ -1,12 +1,9 @@
-import { Inter } from "next/font/google";
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/icon";
 import { dataSource, listGigs } from "@/lib/data";
 import { listGigs as listDemoGigs } from "@/lib/data/demo-adapter";
 import { toneGradient } from "@/lib/data/format";
 import type { GigListItem } from "@/lib/data/types";
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 const steps: Array<{ icon: IconName; title: string; detail: string }> = [
   {
@@ -94,7 +91,7 @@ export async function LandingPage() {
   const { gigs, sample } = await volunteerStrip();
 
   return (
-    <div className={`${inter.className} relative min-h-dvh overflow-x-hidden bg-[#181427] text-white`}>
+    <div className="relative min-h-dvh overflow-x-hidden bg-[#181427] text-white">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="absolute -top-24 -left-16 h-80 w-80 rounded-full bg-[#5646BC]/45 blur-3xl" />
         <div className="absolute top-48 -right-20 h-96 w-96 rounded-full bg-[#D98AB5]/30 blur-3xl" />
@@ -204,22 +201,24 @@ export async function LandingPage() {
                   <Link
                     key={gig.slug}
                     href={`/gigs/${gig.slug}`}
-                    className="flex w-[78%] shrink-0 snap-start flex-col gap-3 rounded-3xl border border-[#E7E2EB]/25 bg-white/95 p-3 text-[#181427] shadow-[0_20px_25px_-5px_rgba(53,36,86,0.15)] transition-colors duration-150 hover:bg-white sm:w-[46%] lg:w-auto"
+                    className="flex w-[78%] shrink-0 snap-start flex-col rounded-3xl bg-[linear-gradient(135deg,#5646BC_0%,#8870DD_55%,#D98AB5_100%)] p-px text-white shadow-[0_20px_25px_-5px_rgba(53,36,86,0.15)] transition-transform duration-150 hover:-translate-y-0.5 sm:w-[46%] lg:w-auto"
                   >
+                    <span className="flex h-full flex-col gap-3 rounded-[23px] bg-[#211A35]/92 p-3 backdrop-blur-xl">
                     <span className={`block h-28 rounded-2xl bg-linear-to-br ${toneGradient(gig.imageTone)}`} />
                     <span className="px-1 pb-1">
-                      <span className="text-xs font-medium tracking-wide text-[#81798B] uppercase">Volunteer</span>
+                      <span className="text-xs font-medium tracking-wide text-purple-gray uppercase">Volunteer</span>
                       <span className="mt-1 block text-lg leading-6 tracking-[-0.02em]">{gig.title}</span>
-                      <span className="mt-2 block text-sm text-[#5C5568]">Host · {gig.hostName}</span>
-                      <span className="mt-2 flex items-center gap-1.5 text-sm text-[#5C5568]">
+                      <span className="mt-2 block text-sm text-purple-gray">Host · {gig.hostName}</span>
+                      <span className="mt-2 flex items-center gap-1.5 text-sm text-purple-gray">
                         <Icon name="map-pin" className="size-4 shrink-0" />
                         {gig.locationLabel}
                       </span>
-                      <span className="mt-1 flex items-center gap-1.5 text-sm text-[#5C5568]">
+                      <span className="mt-1 flex items-center gap-1.5 text-sm text-purple-gray">
                         <Icon name="clock" className="size-4 shrink-0" />
                         {gig.dateLabel}
                       </span>
-                      <span className="mt-3 block text-xs font-medium text-[#201938]">{gig.spotsLabel}</span>
+                      <span className="mt-3 block text-xs font-medium text-white">{gig.spotsLabel}</span>
+                    </span>
                     </span>
                   </Link>
                 ))}

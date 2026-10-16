@@ -13,7 +13,7 @@ import { useOffer } from "@/components/offer-provider";
 type ProfileTab = "About" | "Gigs";
 type Intent = "need" | "help" | "both";
 
-const inputClass = "min-h-13 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-medium text-black outline-none transition placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10";
+const inputClass = "field min-h-13 rounded-2xl";
 
 const settings: Array<[string, string, IconName]> = [
   ["Personal details", "Name and a short bio hosts can see", "arrow-up-right"],
@@ -99,31 +99,33 @@ export function ProfileView() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header className="flex items-center justify-between"><div><p className="text-sm font-semibold text-purple">Your Offer profile</p><h1 className="mt-2 text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Profile.</h1></div><button type="button" className="grid size-11 place-items-center rounded-full bg-white text-lg shadow-sm" aria-label="Profile settings"><Icon name="settings" className="size-5" /></button></header>
+      <header className="flex items-center justify-between"><div><p className="text-sm font-semibold text-purple-ink">Your Offer profile</p><h1 className="mt-2 text-[2.15rem] font-normal leading-[1.05] tracking-[-0.025em] sm:text-5xl">Profile.</h1></div><button type="button" className="grid size-11 place-items-center rounded-full glass text-lg shadow-sm" aria-label="Profile settings"><Icon name="settings" className="size-5" /></button></header>
 
-      <section className="overflow-hidden rounded-[1.75rem] bg-black p-5 text-white shadow-[0_16px_36px_rgba(0,0,0,0.16)] sm:p-7">
+      <section className="overflow-hidden rounded-3xl bg-[linear-gradient(135deg,#5646BC_0%,#8870DD_55%,#D98AB5_100%)] p-px text-white shadow-card">
+        <div className="rounded-[23px] bg-[#211A35]/92 p-5 backdrop-blur-xl sm:p-8">
         <div className="flex items-start justify-between gap-4">
-          <span className="grid size-20 place-items-center rounded-[1.5rem] bg-gradient-to-br from-[#f5cc00] via-[#ff4da3] to-purple text-xl font-bold shadow-lg">{initials}</span>
+          <span className="grid size-20 place-items-center rounded-[1.5rem] bg-gradient-to-br from-[#6B2FE0] via-[#9A3D88] to-[#5646BC] text-xl font-medium text-white shadow-lg">{initials}</span>
           {supabaseReady && !user ? (
-            <Link href={signInHref("/profile")} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-black">Sign in</Link>
+            <Link href={signInHref("/profile")} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-ink">Sign in</Link>
           ) : canEdit ? (
-            <button type="button" onClick={startEditing} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-black">Edit profile</button>
+            <button type="button" onClick={startEditing} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-ink">Edit profile</button>
           ) : null}
         </div>
-        <div className="mt-6"><h2 className="text-2xl font-bold tracking-[-0.04em]">{displayName}</h2><p className="mt-1 text-sm text-white/60">@{handle}</p>{bio ? <p className="mt-4 max-w-md text-sm leading-6 text-white/80">{bio}</p> : null}</div>
-        <div className="mt-6 flex flex-wrap gap-2"><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Host</span><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Volunteer</span>{signedIn ? <span className="rounded-full bg-success/20 px-3 py-1.5 text-xs font-semibold text-[#a6ee91]">{user?.phone ? "Phone on file" : source === "demo-adapter" ? "Demo session" : "Signed in"}</span> : null}</div>
+        <div className="mt-6"><h2 className="text-2xl font-normal tracking-[-0.025em]">{displayName}</h2><p className="mt-1 text-sm text-purple-gray">@{handle}</p>{bio ? <p className="mt-4 max-w-md text-sm leading-6 text-white">{bio}</p> : null}</div>
+        <div className="mt-6 flex flex-wrap gap-2"><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Host</span><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold">Volunteer</span>{signedIn ? <span className="rounded-full bg-success/20 px-3 py-1.5 text-xs font-semibold text-success">{user?.phone ? "Phone on file" : source === "demo-adapter" ? "Demo session" : "Signed in"}</span> : null}</div>
+        </div>
       </section>
 
       <HolographicReferralCard name={displayName} gigsCompleted={gigsCompleted} />
 
       {editing ? (
-        <form onSubmit={saveProfile} className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+        <form onSubmit={saveProfile} className="space-y-5 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-semibold text-purple">Your details</p>
-              <h2 className="mt-1 text-lg font-bold tracking-[-0.03em]">Make it feel like you.</h2>
+              <p className="text-sm font-semibold text-purple-ink">Your details</p>
+              <h2 className="mt-1 text-lg font-normal tracking-[-0.025em]">Make it feel like you.</h2>
             </div>
-            <button type="button" onClick={() => setEditing(false)} className="text-sm font-bold text-purple">Cancel</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-sm font-bold text-purple-ink">Cancel</button>
           </div>
           {error ? <p className="rounded-2xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p> : null}
           <label className="block space-y-2">
@@ -138,25 +140,25 @@ export function ProfileView() {
             <p className="text-sm font-bold">I&apos;m here to...</p>
             <div className="space-y-2">
               {intentOptions.map(([value, title]) => (
-                <button key={value} type="button" onClick={() => setIntent(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${intent === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
-                  <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${intent === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{intent === value ? <Icon name="check" className="size-3" /> : null}</span>
+                <button key={value} type="button" onClick={() => setIntent(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${intent === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-white/15 hover:bg-white/10"}`}>
+                  <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${intent === value ? "border-purple bg-purple-fill text-xs text-white" : "border-white/25"}`}>{intent === value ? <Icon name="check" className="size-3" /> : null}</span>
                   <strong className="block text-sm font-bold">{title}</strong>
                 </button>
               ))}
             </div>
           </div>
-          <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+          <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
             {busy ? "Saving…" : "Save profile"}
           </button>
           <p className="text-center text-xs leading-5 text-purple-gray">Hosts you apply with can see your name and bio. Offer does not take payment.</p>
         </form>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3"><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs joined</p></div><div className="rounded-2xl bg-white p-4 shadow-[0_10px_24px_rgba(53,32,79,0.06)]"><p className="text-2xl font-bold tracking-[-0.05em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs hosted</p></div></div>
+      <div className="grid grid-cols-2 gap-3"><div className="rounded-2xl glass p-4 shadow-card"><p className="text-2xl font-normal tracking-[-0.025em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs joined</p></div><div className="rounded-2xl glass p-4 shadow-card"><p className="text-2xl font-normal tracking-[-0.025em]">—</p><p className="mt-1 text-xs font-semibold text-purple-gray">Gigs hosted</p></div></div>
 
-      <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7"><div className="flex rounded-2xl bg-lavender p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-black text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-black text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-bold tracking-[-0.03em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-lavender p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-lavender p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><Icon name="arrow-up-right" className="size-5 text-purple" /></Link></div>}</section>
+      <section className="rounded-[1.75rem] glass p-5 shadow-card sm:p-7"><div className="flex rounded-2xl bg-white/10 p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-purple-fill text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-purple-fill text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-normal tracking-[-0.025em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-white/10 p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple-ink">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-white/10 p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><Icon name="arrow-up-right" className="size-5 text-purple-ink" /></Link></div>}</section>
 
-      <section className="space-y-3"><h2 className="px-1 text-lg font-bold tracking-[-0.03em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_12px_28px_rgba(53,32,79,0.07)]">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-black/5 px-4 text-left last:border-0 hover:bg-lavender"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><Icon name={icon} className="size-5 shrink-0 text-purple-gray" /></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-lavender"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><Icon name={user ? "log-out" : "log-in"} className="size-5 shrink-0 text-purple-gray" /></button> : null}</div></section>
+      <section className="space-y-3"><h2 className="px-1 text-lg font-normal tracking-[-0.025em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] glass shadow-card">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-white/15 px-4 text-left last:border-0 hover:bg-white/10"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><Icon name={icon} className="size-5 shrink-0 text-purple-gray" /></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-white/10"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><Icon name={user ? "log-out" : "log-in"} className="size-5 shrink-0 text-purple-gray" /></button> : null}</div></section>
     </div>
   );
 }

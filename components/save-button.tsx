@@ -45,9 +45,9 @@ export function StatusButton({
         aria-describedby={status === "idle" ? undefined : statusId}
         disabled={disabled || status === "loading"}
         className={cn(
-          "relative flex min-h-12 w-full items-center justify-center rounded-2xl bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-100",
+          "relative flex min-h-12 w-full items-center justify-center rounded-2xl bg-purple-fill px-5 text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-100",
           status === "loading" && "cursor-wait",
-          status === "success" && "bg-black hover:bg-black",
+          status === "success" && "bg-purple-fill hover:bg-white/15",
           className,
         )}
       >
@@ -87,7 +87,7 @@ export function StatusButton({
               transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 320, damping: 24 }}
               className={cn(
                 "flex size-6 items-center justify-center rounded-full text-white ring-2 ring-lavender",
-                status === "success" ? "bg-success" : "bg-purple",
+                status === "success" ? "bg-success" : "bg-purple-fill",
               )}
             >
               {status === "loading" ? (

@@ -36,16 +36,16 @@ export function CheckInQr({ token, label = "Scan to check in" }: CheckInQrProps)
 
   return (
     <div className="space-y-3 text-center">
-      <div className="mx-auto grid size-52 place-items-center rounded-[1.5rem] bg-white p-3 shadow-[0_12px_28px_rgba(53,32,79,0.08)]">
+      <div className="mx-auto grid size-52 place-items-center rounded-[1.5rem] bg-white p-3 shadow-card">
         {svg ? (
-          <div className="size-full text-black" dangerouslySetInnerHTML={{ __html: svg }} />
+          <div className="size-full text-white" dangerouslySetInnerHTML={{ __html: svg }} />
         ) : (
-          <div className="size-full animate-pulse rounded-2xl bg-lavender" />
+          <div className="size-full animate-pulse rounded-2xl bg-white/10" />
         )}
       </div>
       <p className="text-xs font-semibold text-purple-gray">{label}</p>
       {url ? (
-        <button type="button" onClick={() => void copyLink()} className="text-xs font-bold text-purple">
+        <button type="button" onClick={() => void copyLink()} className="text-xs font-bold text-purple-ink">
           {copied ? "Link copied" : "Copy check-in link"}
         </button>
       ) : null}
