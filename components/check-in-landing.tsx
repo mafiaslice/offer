@@ -76,11 +76,11 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
     return (
       <div className="mx-auto max-w-lg space-y-5">
         <header className="space-y-2">
-          <p className="text-sm font-semibold text-purple">Check-in</p>
-          <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em]">This code is not valid.</h1>
+          <p className="text-sm font-semibold text-purple-ink">Check-in</p>
+          <h1 className="text-[2.15rem] font-normal leading-[1.05] tracking-[-0.025em]">This code is not valid.</h1>
           <p className="text-sm leading-6 text-purple-gray">{error || "Ask the host to show the gig QR again."}</p>
         </header>
-        <Link href="/discover" className="inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">
+        <Link href="/discover" className="inline-flex min-h-11 items-center rounded-full bg-purple-fill px-5 text-sm font-bold text-white">
           Discover gigs
         </Link>
       </div>
@@ -91,8 +91,8 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
     return (
       <div className="mx-auto max-w-2xl space-y-5">
         <header className="space-y-2">
-          <p className="text-sm font-semibold text-purple">Host tools</p>
-          <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em] sm:text-5xl">Attendance.</h1>
+          <p className="text-sm font-semibold text-purple-ink">Host tools</p>
+          <h1 className="text-[2.15rem] font-normal leading-[1.05] tracking-[-0.025em] sm:text-5xl">Attendance.</h1>
           <p className="text-sm leading-6 text-purple-gray sm:text-base">
             Show the QR so accepted participants can check themselves in, or record it for them.
           </p>
@@ -105,8 +105,8 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
   return (
     <div className="mx-auto max-w-lg space-y-5">
       <header className="space-y-2">
-        <p className="text-sm font-semibold text-purple">{context.gig.kindLabel}</p>
-        <h1 className="text-[2.15rem] font-bold leading-[0.98] tracking-[-0.06em]">{context.gig.title}</h1>
+        <p className="text-sm font-semibold text-purple-ink">{context.gig.kindLabel}</p>
+        <h1 className="text-[2.15rem] font-normal leading-[1.05] tracking-[-0.025em]">{context.gig.title}</h1>
         <p className="text-sm leading-6 text-purple-gray">
           {context.gig.dateLabel} · {context.gig.locationLabel}
           <span className="mt-1 block">Hosted by {context.gig.hostName}</span>
@@ -116,14 +116,14 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
       {error ? <p className="rounded-2xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p> : null}
 
       {context.viewerRole === "accepted" ? (
-        <section className="space-y-4 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+        <section className="space-y-4 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
           {present ? (
             <div className="rounded-2xl bg-success/15 p-4">
               <p className="text-sm font-bold text-[#328e1c]">You&apos;re checked in.</p>
               <p className="mt-1 text-sm leading-6 text-[#328e1c]/80">Since {formatCheckInTime(own?.checkedInAt)}.</p>
             </div>
           ) : (
-            <div className="rounded-2xl bg-lavender p-4">
+            <div className="rounded-2xl bg-white/10 p-4">
               <p className="text-sm font-bold">Ready when you are.</p>
               <p className="mt-1 text-sm leading-6 text-purple-gray">
                 {own?.checkedOutAt ? `Last out ${formatCheckInTime(own.checkedOutAt)}.` : "Confirm you showed up for this gig."}
@@ -134,7 +134,7 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
             type="button"
             disabled={busy}
             onClick={() => void act(present ? "/api/check-ins/checkout" : "/api/check-ins")}
-            className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60"
+            className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60"
           >
             {busy ? "Saving…" : present ? "Check out" : "Check in"}
           </button>
@@ -142,24 +142,24 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
       ) : null}
 
       {context.viewerRole === "pending" ? (
-        <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+        <section className="rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
           <p className="text-sm font-bold">Application is still pending.</p>
           <p className="mt-2 text-sm leading-6 text-purple-gray">The host needs to accept you before you can check in on this gig.</p>
         </section>
       ) : null}
 
       {context.viewerRole === "none" || context.viewerRole === "unsigned" ? (
-        <section className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+        <section className="rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
           <p className="text-sm font-bold">{context.viewerRole === "unsigned" ? "Sign in to check in." : "You're not on this gig."}</p>
           <p className="mt-2 text-sm leading-6 text-purple-gray">
             Check-in is for accepted participants. Apply first, or ask the host to check you in after they accept you.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Link href={`/gigs/${context.gig.slug}`} className="inline-flex min-h-11 items-center rounded-full bg-black px-5 text-sm font-bold text-white">
+            <Link href={`/gigs/${context.gig.slug}`} className="inline-flex min-h-11 items-center rounded-full bg-purple-fill px-5 text-sm font-bold text-white">
               View gig
             </Link>
             {context.viewerRole === "unsigned" ? (
-              <Link href={signInHref(`/check-in/${encodeURIComponent(token)}`)} className="inline-flex min-h-11 items-center rounded-full bg-lavender px-5 text-sm font-bold text-black">
+              <Link href={signInHref(`/check-in/${encodeURIComponent(token)}`)} className="inline-flex min-h-11 items-center rounded-full bg-white/10 px-5 text-sm font-bold text-white">
                 Sign in
               </Link>
             ) : null}
@@ -167,7 +167,7 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
         </section>
       ) : null}
 
-      <div className="rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)]">
+      <div className="rounded-[1.75rem] glass p-5 shadow-card">
         <CheckInQr token={token} label="Same QR the host is showing" />
       </div>
     </div>

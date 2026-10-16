@@ -6,6 +6,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { authIntentCopy, safeNextPath } from "@/lib/auth";
 import { isSmsAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/client";
+import { Icon } from "@/components/icon";
 import { useOffer } from "@/components/offer-provider";
 import type { SessionProfile } from "@/lib/data/types";
 
@@ -13,7 +14,7 @@ type Step = "email" | "phone" | "otp" | "profile";
 type Role = "need" | "help" | "both";
 type Channel = "email" | "phone";
 
-const inputClass = "min-h-13 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-medium text-black outline-none transition placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10";
+const inputClass = "field min-h-13 rounded-2xl";
 
 function safeNext(value: string | null) {
   return safeNextPath(value);
@@ -162,15 +163,15 @@ export function AuthFlow() {
   if (complete) {
     return (
       <main className="flex min-h-[calc(100dvh-7rem)] items-center justify-center">
-        <section className="w-full max-w-md rounded-[2rem] bg-white p-7 text-center shadow-[0_18px_42px_rgba(53,32,79,0.1)] sm:p-10">
-          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/15 text-2xl text-[#37951a]">✓</span>
-          <h1 className="mt-6 text-3xl font-bold tracking-[-0.06em]">You&apos;re in.</h1>
+        <section className="w-full max-w-md rounded-[2rem] glass p-7 text-center shadow-card sm:p-10">
+          <span className="mx-auto grid size-16 place-items-center rounded-full bg-success/15 text-2xl text-success"><Icon name="check" className="size-7" /></span>
+          <h1 className="mt-6 text-3xl font-normal tracking-[-0.025em]">You&apos;re in.</h1>
           <p className="mt-3 text-sm leading-6 text-purple-gray">
             {supabaseReady
               ? "Your Offer profile is ready. Anyone signed in can post a gig — Host is a capability, not a separate account."
               : "Your Offer profile is ready. Connect Supabase env vars to persist accounts beyond this demo session."}
           </p>
-          <Link href={next} className="mt-7 flex min-h-13 items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple">
+          <Link href={next} className="mt-7 flex min-h-13 items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0]">
             Explore Offer
           </Link>
         </section>
@@ -182,36 +183,36 @@ export function AuthFlow() {
     <main className="mx-auto flex min-h-[calc(100dvh-7rem)] max-w-md flex-col justify-center py-4">
       <div className="mb-8 flex items-center justify-between">
         <Link href="/discover" className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-xl bg-black text-sm font-bold text-white">O</span>
-          <span className="text-xl font-bold tracking-[-0.05em]">offer</span>
+          <span className="grid size-8 place-items-center rounded-xl bg-purple-fill text-sm font-bold text-white">O</span>
+          <span className="text-xl font-normal tracking-[-0.025em]">offer</span>
         </Link>
         <span className="text-xs font-bold text-purple-gray">{stepLabel}</span>
       </div>
-      <div className="mb-7 h-1.5 overflow-hidden rounded-full bg-black/5">
-        <div className={`h-full rounded-full bg-purple transition-all ${progress}`} />
+      <div className="mb-7 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className={`h-full rounded-full bg-purple-fill transition-all ${progress}`} />
       </div>
       {error ? <p className="mb-4 rounded-2xl bg-error/10 px-4 py-3 text-sm font-semibold text-error">{error}</p> : null}
 
       {step === "email" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <p className="text-sm font-semibold text-purple">{next === "/discover" ? "Welcome to Offer" : "Sign in to continue"}</p>
-            <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Good people<br />make things happen.</h1>
+            <p className="text-sm font-semibold text-purple-ink">{next === "/discover" ? "Welcome to Offer" : "Sign in to continue"}</p>
+            <h1 className="text-[2.8rem] font-normal leading-[1.02] tracking-[-0.025em]">Good people<br />make things happen.</h1>
             <p className="max-w-sm text-sm leading-6 text-purple-gray">{authIntentCopy(next)}</p>
           </header>
-          <form onSubmit={submitEmail} className="space-y-4 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+          <form onSubmit={submitEmail} className="space-y-4 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
             <label className="block space-y-2">
               <span className="text-sm font-bold">Email</span>
               <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} className={inputClass} placeholder="you@email.com" required />
             </label>
-            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
               {busy ? "Sending…" : "Continue with email"}
             </button>
             <p className="text-center text-xs leading-5 text-purple-gray">We&apos;ll email a one-time code. You can also use the magic link in that email.</p>
           </form>
           <p className="text-center text-sm text-purple-gray">
             Prefer SMS?{" "}
-            <button type="button" onClick={() => setStep("phone")} className="font-bold text-purple">
+            <button type="button" onClick={() => setStep("phone")} className="font-bold text-purple-ink">
               Use phone
             </button>
           </p>
@@ -221,14 +222,14 @@ export function AuthFlow() {
       {step === "phone" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <button type="button" onClick={() => setStep("email")} className="text-sm font-bold text-purple">← Use email</button>
-            <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Your number,<br />your people.</h1>
+            <button type="button" onClick={() => setStep("email")} className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-ink"><Icon name="arrow-left" className="size-4" /> Use email</button>
+            <h1 className="text-[2.8rem] font-normal leading-[1.02] tracking-[-0.025em]">Your number,<br />your people.</h1>
             <p className="text-sm leading-6 text-purple-gray">Phone sign-in is optional. Email OTP is the reliable v1 path.</p>
           </header>
-          <form onSubmit={submitPhone} className="space-y-4 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+          <form onSubmit={submitPhone} className="space-y-4 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
             {!smsReady ? (
-              <div className="rounded-2xl bg-lavender p-4">
-                <p className="text-sm font-bold text-black">SMS is not configured</p>
+              <div className="rounded-2xl bg-white/10 p-4">
+                <p className="text-sm font-bold text-white">SMS is not configured</p>
                 <p className="mt-1 text-xs leading-5 text-purple-gray">Phone OTP needs Twilio on the Supabase project. Use email for now, or set NEXT_PUBLIC_SUPABASE_SMS_AUTH=true after SMS is enabled.</p>
               </div>
             ) : null}
@@ -236,10 +237,10 @@ export function AuthFlow() {
               <span className="text-sm font-bold">Phone number</span>
               <input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className={inputClass} placeholder="+234 801 234 5678" required={smsReady} disabled={!smsReady} />
             </label>
-            <button type="submit" disabled={!smsReady || busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+            <button type="submit" disabled={!smsReady || busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
               {smsReady ? (busy ? "Sending…" : "Continue with phone") : "SMS not configured"}
             </button>
-            <button type="button" onClick={() => setStep("email")} className="w-full text-center text-sm font-bold text-purple">
+            <button type="button" onClick={() => setStep("email")} className="w-full text-center text-sm font-bold text-purple-ink">
               Continue with email instead
             </button>
           </form>
@@ -249,15 +250,15 @@ export function AuthFlow() {
       {step === "otp" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <button type="button" onClick={() => setStep(channel === "phone" ? "phone" : "email")} className="text-sm font-bold text-purple">
-              ← Change {channel === "phone" ? "number" : "email"}
+            <button type="button" onClick={() => setStep(channel === "phone" ? "phone" : "email")} className="inline-flex items-center gap-1.5 text-sm font-bold text-purple-ink">
+              <Icon name="arrow-left" className="size-4" /> Change {channel === "phone" ? "number" : "email"}
             </button>
-            <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Check your<br />messages.</h1>
+            <h1 className="text-[2.8rem] font-normal leading-[1.02] tracking-[-0.025em]">Check your<br />messages.</h1>
             <p className="text-sm leading-6 text-purple-gray">
-              Enter the 6-digit code we sent to <strong className="text-black">{destination || (channel === "phone" ? "your phone" : "your email")}</strong>.
+              Enter the 6-digit code we sent to <strong className="text-white">{destination || (channel === "phone" ? "your phone" : "your email")}</strong>.
             </p>
           </header>
-          <form onSubmit={submitOtp} className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+          <form onSubmit={submitOtp} className="space-y-5 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
             <div className="grid grid-cols-6 gap-2">
               {otp.map((digit, index) => (
                 <input
@@ -268,12 +269,12 @@ export function AuthFlow() {
                   maxLength={1}
                   value={digit}
                   onChange={(event) => updateDigit(index, event.target.value)}
-                  className="h-14 w-full rounded-xl border border-black/10 bg-lavender text-center text-lg font-bold outline-none focus:border-purple focus:ring-4 focus:ring-purple/10"
+                  className="h-14 w-full rounded-xl border border-white/15 bg-white/10 text-center text-lg font-bold outline-none focus:border-purple focus:ring-4 focus:ring-purple/10"
                   required
                 />
               ))}
             </div>
-            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
               {busy ? "Verifying…" : channel === "phone" ? "Verify number" : "Verify email"}
             </button>
             <button
@@ -284,7 +285,7 @@ export function AuthFlow() {
                   setError(caught instanceof Error ? caught.message : "Could not resend.");
                 });
               }}
-              className="w-full text-center text-sm font-bold text-purple"
+              className="w-full text-center text-sm font-bold text-purple-ink"
             >
               Resend code
             </button>
@@ -295,10 +296,10 @@ export function AuthFlow() {
       {step === "profile" ? (
         <section className="space-y-7">
           <header className="space-y-3">
-            <h1 className="text-[2.8rem] font-bold leading-[0.95] tracking-[-0.07em]">Make it<br />feel like you.</h1>
+            <h1 className="text-[2.8rem] font-normal leading-[1.02] tracking-[-0.025em]">Make it<br />feel like you.</h1>
             <p className="text-sm leading-6 text-purple-gray">A few details help people know who they&apos;re meeting on Offer.</p>
           </header>
-          <form onSubmit={submitProfile} className="space-y-5 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-7">
+          <form onSubmit={submitProfile} className="space-y-5 rounded-[1.75rem] glass p-5 shadow-card sm:p-7">
             <label className="block space-y-2">
               <span className="text-sm font-bold">Your name</span>
               <input className={inputClass} placeholder="What should we call you?" value={name} onChange={(event) => setName(event.target.value)} required />
@@ -311,14 +312,14 @@ export function AuthFlow() {
               <p className="text-sm font-bold">I&apos;m here to...</p>
               <div className="space-y-2">
                 {([["help", "I want to volunteer on gigs"], ["need", "I host gigs and need volunteers"], ["both", "Both"]] as const).map(([value, title]) => (
-                  <button key={value} type="button" onClick={() => setRole(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${role === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-black/10 hover:bg-lavender"}`}>
-                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${role === value ? "border-purple bg-purple text-xs text-white" : "border-black/20"}`}>{role === value ? "✓" : null}</span>
+                  <button key={value} type="button" onClick={() => setRole(value)} className={`flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${role === value ? "border-purple bg-purple/5 ring-2 ring-purple/10" : "border-white/15 hover:bg-white/10"}`}>
+                    <span className={`grid size-5 shrink-0 place-items-center rounded-full border ${role === value ? "border-purple bg-purple-fill text-xs text-white" : "border-white/25"}`}>{role === value ? <Icon name="check" className="size-3" /> : null}</span>
                     <strong className="block text-sm font-bold">{title}</strong>
                   </button>
                 ))}
               </div>
             </div>
-            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+            <button type="submit" disabled={busy} className="flex min-h-13 w-full items-center justify-center rounded-2xl bg-purple-fill text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
               {busy ? "Saving…" : "Complete profile"}
             </button>
           </form>

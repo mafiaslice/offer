@@ -24,12 +24,13 @@ npm run typecheck
 npm run seed:demo
 ```
 
-Dev server: [http://localhost:3000](http://localhost:3000) — `/` redirects to `/discover`.
+Dev server: [http://localhost:3000](http://localhost:3000) — `/` is the landing page. The app opens at `/discover`.
 
 ## Routes
 
 | Path | Purpose |
 | --- | --- |
+| `/` | Landing page |
 | `/discover` | Find gigs (volunteer-first) |
 | `/my-gigs` | Gigs you host or joined |
 | `/post` | Create a Gig |
@@ -82,6 +83,7 @@ public/        Static assets
 - [`docs/open-decisions.md`](docs/open-decisions.md) — unresolved product questions
 - [`docs/data-layer.md`](docs/data-layer.md) — Supabase setup and adapter behavior
 - [`docs/e2e-walkthrough.md`](docs/e2e-walkthrough.md) — local click path to verify Discover → detail → apply → My Gigs → Messages → Post → Profile
+- [`docs/icons.md`](docs/icons.md) — Rune icon source and mapping
 
 ## Status
 

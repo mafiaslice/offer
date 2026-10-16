@@ -67,7 +67,7 @@ export function HolographicReferralCard({ name, gigsCompleted, className }: Holo
     <div className={cn("w-full [perspective:900px]", className)}>
       <motion.article
         aria-label={`${name}'s volunteer card`}
-        className="relative overflow-hidden rounded-[1.75rem] bg-black p-3 text-white shadow-[0_16px_36px_rgba(0,0,0,0.16)] outline-none focus-visible:ring-2 focus-visible:ring-purple focus-visible:ring-offset-2 focus-visible:ring-offset-lavender sm:p-4"
+        className="relative overflow-hidden rounded-[1.75rem] bg-[linear-gradient(135deg,#5646BC_0%,#8870DD_55%,#D98AB5_100%)] p-px text-white shadow-card outline-none focus-visible:ring-2 focus-visible:ring-purple-ink focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
         onPointerEnter={(event) => {
           if (event.pointerType !== "touch" && !reduce) glowOpacity.set(0.85);
         }}
@@ -80,32 +80,34 @@ export function HolographicReferralCard({ name, gigsCompleted, className }: Holo
         style={{ transform: reduce ? "none" : cardTransform }}
         tabIndex={0}
       >
+        <div className="rounded-[27px] bg-[#181427]/75 p-3 backdrop-blur-xl sm:p-4">
         <div className="flex items-center justify-between px-2 pt-1 pb-3">
           <span className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">Volunteer</span>
-          <span className="text-xs font-semibold text-white/50">Offer</span>
+          <span className="text-xs font-semibold text-purple-gray">Offer</span>
         </div>
 
-        <div className="relative mx-1 aspect-[5/3] overflow-hidden rounded-2xl bg-gradient-to-br from-purple via-white to-lavender sm:aspect-[2/1]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.7),transparent_36%),radial-gradient(circle_at_80%_80%,rgba(142,82,255,0.45),transparent_40%)]" />
+        <div className="relative mx-1 aspect-[5/3] overflow-hidden rounded-2xl bg-gradient-to-br from-[#5646BC] via-[#8870DD] to-[#D98AB5] sm:aspect-[2/1]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(255,255,255,0.35),transparent_36%),radial-gradient(circle_at_80%_80%,rgba(142,82,255,0.45),transparent_40%)]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#181427]/80 via-[#181427]/15 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
             <div>
               <p className="text-[11px] font-bold tracking-wide text-white/80 uppercase">Gigs completed</p>
-              <p className="mt-1 text-4xl font-bold tracking-[-0.06em] text-white">{completedLabel}</p>
+              <p className="mt-1 text-4xl font-normal tracking-[-0.025em] text-white">{completedLabel}</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-end justify-between gap-3 px-2 pt-4 pb-2">
           <div className="min-w-0">
-            <h2 className="truncate text-xl font-bold tracking-[-0.04em]">{name}</h2>
-            <p className="mt-1 text-xs text-white/60">Your volunteer card</p>
+            <h2 className="truncate text-xl font-normal tracking-[-0.025em]">{name}</h2>
+            <p className="mt-1 text-xs text-purple-gray">Your volunteer card</p>
           </div>
           <button
             type="button"
             onClick={() => {
               void share();
             }}
-            className="min-h-11 shrink-0 rounded-full bg-white px-4 text-sm font-bold text-black transition-colors hover:bg-lavender"
+            className="min-h-11 shrink-0 rounded-full bg-white px-4 text-sm font-medium text-ink transition-colors duration-150 hover:bg-[#F4F1F8]"
           >
             {copied ? "Link copied" : "Invite"}
           </button>
@@ -113,6 +115,7 @@ export function HolographicReferralCard({ name, gigsCompleted, className }: Holo
         <p className="sr-only" role="status">
           {copied ? "Invite link copied." : ""}
         </p>
+        </div>
 
         <motion.div
           aria-hidden="true"

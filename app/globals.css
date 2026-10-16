@@ -2,34 +2,47 @@
 
 /*
   Offer tokens — runtime source of truth.
-  Tailwind names are mapped in @theme below.
-  Do not add forest-green. Visual matching waits on reference boards.
-  See docs/ui-reference.md.
+  Surfaces follow the Aeris glass spec (deep purple-black, frosted cards).
+  Brand purple stays #8E52FF. Filled controls and small purple text use
+  AA-safe companions so white and muted copy clear WCAG AA on these surfaces.
+  Do not add forest-green. See docs/ui-reference.md.
 */
 :root {
   --offer-purple: #8e52ff;
+  --offer-purple-fill: #6b2fe0;
+  --offer-purple-ink: #c4a6ff;
   --offer-lavender: #f3f4f9;
-  --offer-purple-gray: #7f7089;
-  --offer-border: #dadada;
+  --offer-purple-gray: #b7aec4;
+  --offer-border: #e7e2eb;
   --offer-black: #000000;
   --offer-white: #ffffff;
+  --offer-ink: #181427;
+  --offer-surface: #201938;
+  --offer-raised: #211a35;
   --offer-error: #ff4da3;
   --offer-success: #6cd23e;
   --offer-turquoise: #49d7b8;
   --offer-yellow: #f5cc00;
-  --offer-radius-card: 1.25rem;
-  --offer-radius-pill: 999px;
-  --offer-shadow-card: 0 14px 34px rgba(53, 32, 79, 0.08);
-  --offer-font-sans: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  --offer-radius-card: 1.5rem;
+  --offer-radius-panel: 1.5rem;
+  --offer-radius-pill: 9999px;
+  --offer-shadow-card: 0 20px 25px -5px rgba(53, 36, 86, 0.15), 0 8px 10px -6px rgba(53, 36, 86, 0.12);
+  --offer-font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+  --offer-ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @theme inline {
   --color-purple: var(--offer-purple);
+  --color-purple-fill: var(--offer-purple-fill);
+  --color-purple-ink: var(--offer-purple-ink);
   --color-lavender: var(--offer-lavender);
   --color-purple-gray: var(--offer-purple-gray);
   --color-border: var(--offer-border);
   --color-black: var(--offer-black);
   --color-white: var(--offer-white);
+  --color-ink: var(--offer-ink);
+  --color-surface: var(--offer-surface);
+  --color-raised: var(--offer-raised);
   --color-error: var(--offer-error);
   --color-success: var(--offer-success);
   --color-turquoise: var(--offer-turquoise);
@@ -37,6 +50,7 @@
   --font-sans: var(--offer-font-sans);
   --radius-card: var(--offer-radius-card);
   --radius-pill: var(--offer-radius-pill);
+  --shadow-card: var(--offer-shadow-card);
 }
 
 * {
@@ -44,13 +58,14 @@
 }
 
 html {
-  background: var(--offer-lavender);
+  background: var(--offer-ink);
+  color-scheme: dark;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--offer-lavender);
-  color: var(--offer-black);
+  background: var(--offer-ink);
+  color: var(--offer-white);
   font-family: var(--offer-font-sans), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
 }
@@ -61,6 +76,8 @@ input,
 textarea,
 select {
   -webkit-tap-highlight-color: transparent;
+  transition-duration: 150ms;
+  transition-timing-function: var(--offer-ease);
 }
 
 button,
@@ -69,7 +86,8 @@ a {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--offer-purple) 24%, white);
+  background: color-mix(in srgb, var(--offer-purple) 45%, transparent);
+  color: white;
 }
 
 .hide-scrollbar {
@@ -78,4 +96,56 @@ a {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Frosted panel. Blur sits in the 12–24px spec range. */
+.glass {
+  border: 1px solid color-mix(in srgb, #e7e2eb 22%, transparent);
+  background: color-mix(in srgb, var(--offer-raised) 84%, transparent);
+  color: white;
+  box-shadow: var(--offer-shadow-card);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-soft {
+  border: 1px solid color-mix(in srgb, #e7e2eb 16%, transparent);
+  background: color-mix(in srgb, var(--offer-surface) 78%, transparent);
+  color: white;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.field {
+  min-height: 3rem;
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, #e7e2eb 28%, transparent);
+  background: color-mix(in srgb, var(--offer-surface) 88%, transparent);
+  padding-inline: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: white;
+  outline: none;
+}
+
+.field::placeholder {
+  color: var(--offer-purple-gray);
+}
+
+.field:focus {
+  border-color: var(--offer-purple-ink);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--offer-purple) 28%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

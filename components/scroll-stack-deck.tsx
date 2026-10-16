@@ -82,14 +82,18 @@ function CardFace({ item }: { item: StackCard }) {
   const tone = item.tone ?? "night";
   return (
     <article className="relative box-border w-full pt-11">
-      <div className="absolute top-0 left-0 flex h-11 w-40 items-center rounded-t-2xl bg-white px-4 text-sm font-bold text-black shadow-[inset_0_-1px_0_rgba(0,0,0,0.04)]">
-        <span className="truncate">{item.tabTitle}</span>
+      <div className="absolute top-0 left-0 rounded-t-2xl bg-[linear-gradient(135deg,#5646BC_0%,#8870DD_55%,#D98AB5_100%)] p-px">
+        <div className="flex h-10 w-40 items-center rounded-t-[15px] bg-[#211A35] px-4 text-sm font-medium text-white">
+          <span className="truncate">{item.tabTitle}</span>
+        </div>
       </div>
-      <div className="grid gap-4 rounded-b-2xl rounded-tr-2xl bg-white p-4 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-6">
-        <div className={`h-28 rounded-2xl bg-gradient-to-br ${toneClass[tone]} sm:h-36`} />
-        <div className="flex flex-col gap-2">
-          <h3 className="text-xl font-bold tracking-[-0.04em] text-black">{item.title}</h3>
-          <p className="text-sm leading-6 text-purple-gray">{item.description}</p>
+      <div className="rounded-b-3xl rounded-tr-3xl bg-[linear-gradient(135deg,#5646BC_0%,#8870DD_55%,#D98AB5_100%)] p-px shadow-card">
+        <div className="grid gap-4 rounded-b-[23px] rounded-tr-[23px] bg-[#211A35]/95 p-4 backdrop-blur-xl sm:p-6">
+          <div className={`h-28 rounded-2xl bg-gradient-to-br ${toneClass[tone]} sm:h-36`} />
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xl font-normal tracking-[-0.025em] text-white">{item.title}</h3>
+            <p className="text-sm leading-6 text-purple-gray">{item.description}</p>
+          </div>
         </div>
       </div>
     </article>
@@ -138,7 +142,7 @@ export function ScrollStackDeck({ items, title, subtitle, scrollLabel = "Scroll"
     <section className="flex flex-col gap-4" aria-labelledby="star-showcase-heading">
       <div className="flex flex-col gap-2">
         <div className="flex items-end justify-between gap-3">
-          <h2 id="star-showcase-heading" className="text-xl font-bold tracking-[-0.04em]">
+          <h2 id="star-showcase-heading" className="text-xl font-normal tracking-[-0.025em]">
             {title}
           </h2>
           {reduce ? null : (

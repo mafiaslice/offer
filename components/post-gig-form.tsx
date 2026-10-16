@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { signInHref } from "@/lib/auth";
 import { useOffer } from "@/components/offer-provider";
+import { Icon } from "@/components/icon";
 import { MultiStepForm, type MultiStep } from "@/components/multi-step-form";
 
 type GigKind = "volunteer" | "paid";
 
-const inputClass = "min-h-12 w-full rounded-2xl border border-black/10 bg-white px-4 text-sm font-medium text-black outline-none transition placeholder:text-purple-gray/60 focus:border-purple focus:ring-4 focus:ring-purple/10";
-const labelClass = "text-sm font-bold text-black";
+const inputClass = "field min-h-12 rounded-2xl";
+const labelClass = "text-sm font-medium text-white";
 
 const steps: MultiStep[] = [
   { title: "Basics", description: "Give your gig a clear shape." },
@@ -36,9 +37,9 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl bg-lavender px-4 py-3">
-      <p className="text-[11px] font-bold tracking-wide text-purple uppercase">{label}</p>
-      <p className="mt-1 text-sm font-semibold leading-6 text-black">{value || "—"}</p>
+    <div className="rounded-2xl bg-white/10 px-4 py-3">
+      <p className="text-[11px] font-bold tracking-wide text-purple-ink uppercase">{label}</p>
+      <p className="mt-1 text-sm font-semibold leading-6 text-white">{value || "—"}</p>
     </div>
   );
 }
@@ -187,16 +188,16 @@ export function PostGigForm() {
                 setStep((current) => Math.max(current - 1, 0));
               }}
               disabled={step === 0}
-              className="min-h-11 rounded-full bg-lavender px-4 text-sm font-bold text-black transition-colors hover:bg-black hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-lavender disabled:hover:text-black"
+              className="min-h-11 rounded-full bg-white/10 px-4 text-sm font-bold text-white transition-colors hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/10 disabled:hover:text-white"
             >
               Back
             </button>
             {step < steps.length - 1 ? (
-              <button type="button" onClick={continueStep} className="min-h-11 rounded-full bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple">
+              <button type="button" onClick={continueStep} className="min-h-11 rounded-full bg-purple-fill px-5 text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0]">
                 Continue
               </button>
             ) : (
-              <button type="submit" disabled={busy} className="min-h-11 rounded-full bg-black px-5 text-sm font-bold text-white transition-colors hover:bg-purple disabled:opacity-60">
+              <button type="submit" disabled={busy} className="min-h-11 rounded-full bg-purple-fill px-5 text-sm font-bold text-white transition-colors hover:bg-[#7A3FF0] disabled:opacity-60">
                 {busy ? "Creating…" : kind === "volunteer" ? "Create volunteer gig" : "Create paid gig"}
               </button>
             )}
@@ -205,20 +206,20 @@ export function PostGigForm() {
       >
         {step === 0 ? (
           <div className="flex flex-col gap-5">
-            <div className="flex rounded-2xl bg-lavender p-1.5">
+            <div className="flex rounded-2xl bg-white/10 p-1.5">
               {(["volunteer", "paid"] as const).map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setKind(option)}
-                  className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-all ${kind === option ? "bg-black text-white shadow-sm" : "text-purple-gray hover:text-black"}`}
+                  className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-all ${kind === option ? "bg-purple-fill text-white shadow-sm" : "text-purple-gray hover:text-white"}`}
                 >
                   {option === "volunteer" ? "Volunteer gig" : "Paid gig"}
                 </button>
               ))}
             </div>
-            <div className="rounded-2xl bg-lavender p-4">
-              <p className="text-sm font-bold text-black">{kind === "volunteer" ? "What do you need volunteers for?" : "A paid opportunity"}</p>
+            <div className="rounded-2xl bg-white/10 p-4">
+              <p className="text-sm font-bold text-white">{kind === "volunteer" ? "What do you need volunteers for?" : "A paid opportunity"}</p>
               <p className="mt-1 text-xs leading-5 text-purple-gray">
                 {kind === "volunteer"
                   ? "Volunteers give their time. Be clear about the role, the shift, the incentives and the dress code."
@@ -248,12 +249,12 @@ export function PostGigForm() {
               </Field>
             </div>
             <div className="flex flex-col gap-1">
-              <h3 className="text-lg font-bold tracking-[-0.03em]">When and where</h3>
+              <h3 className="text-lg font-normal tracking-[-0.025em]">When and where</h3>
               <p className="text-sm text-purple-gray">Help people know what showing up looks like.</p>
             </div>
             <Field label="Place">
               <div className="relative">
-                <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-purple-gray">⌖</span>
+                <Icon name="map-pin" className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-purple-gray" />
                 <input name="locationLabel" value={locationLabel} onChange={(event) => setLocationLabel(event.target.value)} className={`${inputClass} pl-10`} placeholder="Search for a place or add an address" required />
               </div>
             </Field>
@@ -292,14 +293,14 @@ export function PostGigForm() {
                   <button
                     type="button"
                     onClick={() => setRoles((current) => current.filter((_, roleIndex) => roleIndex !== index))}
-                    className="grid size-12 shrink-0 place-items-center rounded-2xl border border-black/10 text-lg text-purple-gray transition-colors hover:border-error hover:text-error"
+                    className="grid size-12 shrink-0 place-items-center rounded-2xl border border-white/15 text-lg text-purple-gray transition-colors hover:border-error hover:text-error"
                     aria-label={`Remove role ${index + 1}`}
                   >
-                    ×
+                    <Icon name="x" className="size-5" />
                   </button>
                 </div>
               ))}
-              <button type="button" onClick={addRole} className="min-h-11 rounded-full border border-dashed border-purple px-4 text-sm font-bold text-purple transition-colors hover:bg-lavender">
+              <button type="button" onClick={addRole} className="min-h-11 rounded-full border border-dashed border-purple px-4 text-sm font-bold text-purple-ink transition-colors hover:bg-white/10">
                 + Add another role
               </button>
             </div>
@@ -320,8 +321,8 @@ export function PostGigForm() {
             <Field label="Instructions">
               <textarea name="instructions" value={instructions} onChange={(event) => setInstructions(event.target.value)} className={`${inputClass} min-h-28 resize-none py-3`} placeholder="Dress code, arrival time, what to bring..." />
             </Field>
-            <button type="button" className="flex min-h-28 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-lavender text-center transition-colors hover:border-purple">
-              <span className="text-2xl text-purple">＋</span>
+            <button type="button" className="flex min-h-28 w-full flex-col items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/10 text-center transition-colors hover:border-purple">
+              <Icon name="image-plus" className="size-6 text-purple-ink" />
               <span className="mt-1 text-sm font-bold">Add photos or a cover</span>
               <span className="mt-1 text-xs text-purple-gray">Show people what they&apos;re joining</span>
             </button>
@@ -348,12 +349,12 @@ export function PostGigForm() {
               </div>
             ) : null}
             {submitted ? (
-              <div role="status" className="rounded-2xl bg-success/15 p-4 text-sm font-semibold text-[#328e1c]">
+              <div role="status" className="rounded-2xl bg-success/15 p-4 text-sm font-semibold text-success">
                 {persisted
                   ? "Your gig is live. Anyone signed in can host — no separate Host account."
                   : "Your gig draft is ready. Publishing persists once Supabase env vars are set."}
                 {persisted && slug ? (
-                  <button type="button" onClick={() => router.push(`/gigs/${slug}`)} className="mt-3 block text-sm font-bold text-black underline">
+                  <button type="button" onClick={() => router.push(`/gigs/${slug}`)} className="mt-3 block text-sm font-bold text-white underline">
                     View gig
                   </button>
                 ) : null}

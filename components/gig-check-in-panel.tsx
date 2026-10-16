@@ -62,7 +62,7 @@ function ParticipantRow({
   }
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-lavender/60 p-3">
+    <div className="rounded-2xl border border-white/15 bg-white/10 p-3">
       <div className="flex items-center gap-3">
         <span className="grid size-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ffcf91] to-[#8e52ff] text-xs font-bold text-white">
           {person.initials}
@@ -77,7 +77,7 @@ function ParticipantRow({
           type="button"
           disabled={busy}
           onClick={() => void act()}
-          className={`min-h-10 shrink-0 rounded-xl px-3 text-xs font-bold ${present ? "border border-black/10 text-purple-gray" : "bg-black text-white"}`}
+          className={`min-h-10 shrink-0 rounded-xl px-3 text-xs font-bold ${present ? "border border-white/15 text-purple-gray" : "bg-purple-fill text-white"}`}
         >
           {busy ? "…" : present ? "Check out" : "Check in"}
         </button>
@@ -112,17 +112,17 @@ export function GigCheckInPanel({ gigSlug, compact }: GigCheckInPanelProps) {
   const present = context?.checkIns ?? [];
 
   return (
-    <section className="space-y-4 rounded-[1.75rem] bg-white p-5 shadow-[0_14px_34px_rgba(53,32,79,0.08)] sm:p-6">
+    <section className="space-y-4 rounded-[1.75rem] glass p-5 shadow-card sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-semibold text-purple">Attendance</p>
-          <h2 className="mt-1 text-lg font-bold tracking-[-0.04em]">{context?.gig.title ?? "Check-in QR"}</h2>
+          <p className="text-sm font-semibold text-purple-ink">Attendance</p>
+          <h2 className="mt-1 text-lg font-normal tracking-[-0.025em]">{context?.gig.title ?? "Check-in QR"}</h2>
           <p className="mt-1 text-xs leading-5 text-purple-gray">
             Show this QR at the gig. Accepted participants scan it to check in themselves. You can also check people in here.
           </p>
         </div>
         {compact ? (
-          <button type="button" onClick={() => setOpen((value) => !value)} className="text-xs font-bold text-purple">
+          <button type="button" onClick={() => setOpen((value) => !value)} className="text-xs font-bold text-purple-ink">
             {open ? "Hide" : "Show QR"}
           </button>
         ) : null}
@@ -148,7 +148,7 @@ export function GigCheckInPanel({ gigSlug, compact }: GigCheckInPanelProps) {
                 ) : (
                   <p className="text-sm leading-6 text-purple-gray">Nobody is checked in yet.</p>
                 )}
-                <Link href={context.path} className="inline-flex text-sm font-bold text-purple">
+                <Link href={context.path} className="inline-flex text-sm font-bold text-purple-ink">
                   Open check-in page
                 </Link>
               </div>
@@ -158,7 +158,7 @@ export function GigCheckInPanel({ gigSlug, compact }: GigCheckInPanelProps) {
           ) : null}
 
           {context?.viewerRole === "host" && context.participants.length > 0 ? (
-            <div className="space-y-3 border-t border-black/5 pt-4">
+            <div className="space-y-3 border-t border-white/15 pt-4">
               <p className="text-sm font-bold">Accepted participants</p>
               {context.participants.map((person) => (
                 <ParticipantRow key={person.userId} person={person} gigSlug={gigSlug} onChanged={refresh} />
