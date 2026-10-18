@@ -4,20 +4,22 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navItems } from "@/lib/nav";
+import type { DataSource } from "@/lib/data/types";
 import { NavIcon } from "@/components/nav-icon";
 import { OfferProvider, useOffer } from "@/components/offer-provider";
 
 type AppShellProps = {
   children: ReactNode;
+  source: DataSource;
 };
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, source }: AppShellProps) {
   const pathname = usePathname();
 
   if (pathname === "/") return children;
 
   return (
-    <OfferProvider>
+    <OfferProvider source={source}>
       <div className="relative min-h-dvh overflow-x-hidden bg-ink text-white">
         <div aria-hidden="true" className="pointer-events-none fixed inset-0">
           <div className="absolute -top-24 left-1/4 h-80 w-80 rounded-full bg-[#5646BC]/35 blur-3xl" />

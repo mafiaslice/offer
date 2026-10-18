@@ -52,7 +52,7 @@ export function CheckInLanding({ token, initial, error: loadError }: CheckInLand
 
   async function act(path: "/api/check-ins" | "/api/check-ins/checkout") {
     setError("");
-    if (source === "supabase" && ready && !user) {
+    if (source === "postgres" && ready && !user) {
       router.push(signInHref(`/check-in/${encodeURIComponent(token)}`));
       return;
     }

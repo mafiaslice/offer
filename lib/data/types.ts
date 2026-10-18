@@ -1,4 +1,4 @@
-export type DataSource = "demo-adapter" | "supabase";
+export type DataSource = "demo-adapter" | "postgres";
 
 export type GigCategory = "Events" | "Community" | "Hospitality" | "Projects";
 export type GigKindLabel = "Volunteer" | "Paid gig";

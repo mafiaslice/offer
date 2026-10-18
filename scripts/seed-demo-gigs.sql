@@ -1,12 +1,9 @@
--- OPT-IN demo seed. Not a migration. Build and CI do not run this file.
+-- OPT-IN demo seed. Not a migration. Build, CI, and Railway pre-deploy do not run this file.
 --
--- Apply only when you want Discover fixtures in Postgres:
 --   npm run seed:demo
---     (reads SUPABASE_SERVICE_ROLE_KEY from .env.local; never commit the key)
---   or, after you sign in once so a profiles row exists:
---     psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
 --
--- Uses the oldest profile as host. Re-running is idempotent on slug.
+-- Uses the oldest profile as host. `npm run seed:demo` creates one when none exists.
+-- Re-running is idempotent on slug. Roles and slots for these five gigs are replaced.
 -- Roles, slots, and a fuller summary are included so gig detail feels real.
 
 do $$

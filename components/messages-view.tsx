@@ -130,7 +130,7 @@ export function MessagesView() {
   }
 
   async function startConversation(applicationId: string) {
-    if (source === "supabase" && ready && !user) {
+    if (source === "postgres" && ready && !user) {
       router.push(signInHref("/messages"));
       return;
     }

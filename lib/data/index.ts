@@ -1,6 +1,6 @@
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isDatabaseConfigured } from "@/lib/db/env";
 import * as demo from "@/lib/data/demo-adapter";
-import * as supabase from "@/lib/data/supabase-adapter";
+import * as postgres from "@/lib/data/postgres-adapter";
 import { initialsFromName } from "@/lib/data/format";
 import type {
   ApplyInput,
@@ -42,26 +42,26 @@ export type {
 } from "@/lib/data/types";
 
 export function dataSource(): DataSource {
-  return isSupabaseConfigured() ? "supabase" : "demo-adapter";
+  return isDatabaseConfigured() ? "postgres" : "demo-adapter";
 }
 
 export async function listGigs(filters: GigListFilters = {}): Promise<ListResult<GigListItem[]>> {
-  if (isSupabaseConfigured()) return supabase.listGigs(filters);
+  if (isDatabaseConfigured()) return postgres.listGigs(filters);
   return demo.listGigs(filters);
 }
 
 export async function getGigBySlug(slug: string): Promise<GigDetail | null> {
-  if (isSupabaseConfigured()) return supabase.getGigBySlug(slug);
+  if (isDatabaseConfigured()) return postgres.getGigBySlug(slug);
   return demo.getGigBySlug(slug);
 }
 
 export async function getSessionProfile(): Promise<SessionProfile | null> {
-  if (isSupabaseConfigured()) return supabase.getSessionProfile();
+  if (isDatabaseConfigured()) return postgres.getSessionProfile();
   return demo.getSessionProfile();
 }
 
 export async function ensureProfile(input: ProfilePatch): Promise<SessionProfile | null> {
-  if (isSupabaseConfigured()) return supabase.ensureProfile(input);
+  if (isDatabaseConfigured()) return postgres.ensureProfile(input);
   const displayName = input.displayName?.trim() || "You";
   return {
     id: "demo-user",
@@ -74,77 +74,77 @@ export async function ensureProfile(input: ProfilePatch): Promise<SessionProfile
 }
 
 export async function listMyActivity(): Promise<MyActivity> {
-  if (isSupabaseConfigured()) return supabase.listMyActivity();
+  if (isDatabaseConfigured()) return postgres.listMyActivity();
   return demo.listMyActivity();
 }
 
 export async function createGig(input: CreateGigInput): Promise<{ gig: GigDetail; source: DataSource; persisted: boolean }> {
-  if (isSupabaseConfigured()) {
-    return { gig: await supabase.createGig(input), source: "supabase", persisted: true };
+  if (isDatabaseConfigured()) {
+    return { gig: await postgres.createGig(input), source: "postgres", persisted: true };
   }
   return { gig: demo.createGig(input), source: "demo-adapter", persisted: false };
 }
 
 export async function applyToGig(input: ApplyInput): Promise<{ application: UserApplication; source: DataSource; persisted: boolean }> {
-  if (isSupabaseConfigured()) {
-    return { application: await supabase.applyToGig(input), source: "supabase", persisted: true };
+  if (isDatabaseConfigured()) {
+    return { application: await postgres.applyToGig(input), source: "postgres", persisted: true };
   }
   return { application: demo.applyToGig(input), source: "demo-adapter", persisted: false };
 }
 
 export async function reviewApplication(id: string, status: "accepted" | "declined" | "withdrawn") {
-  if (isSupabaseConfigured()) {
-    return { ...(await supabase.reviewApplication(id, status)), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { ...(await postgres.reviewApplication(id, status)), source: "postgres" as const, persisted: true };
   }
   return { ...demo.reviewApplication(id, status as "accepted" | "declined"), source: "demo-adapter" as const, persisted: false };
 }
 
 export async function listInbox(): Promise<{ data: InboxPayload; source: DataSource }> {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.listInbox(), source: "supabase" };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.listInbox(), source: "postgres" };
   }
   return { data: demo.listInbox(), source: "demo-adapter" };
 }
 
 export async function listThreadMessages(threadId: string) {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.listThreadMessages(threadId), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.listThreadMessages(threadId), source: "postgres" as const, persisted: true };
   }
   return { data: demo.listThreadMessages(threadId), source: "demo-adapter" as const, persisted: false };
 }
 
 export async function sendThreadMessage(threadId: string, body: string) {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.sendThreadMessage(threadId, body), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.sendThreadMessage(threadId, body), source: "postgres" as const, persisted: true };
   }
   return { data: demo.sendThreadMessage(threadId, body), source: "demo-adapter" as const, persisted: false };
 }
 
 export async function ensureThread(input: EnsureThreadInput) {
-  if (isSupabaseConfigured()) {
-    const result = await supabase.ensureThread(input);
-    return { data: result.thread, created: result.created, source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    const result = await postgres.ensureThread(input);
+    return { data: result.thread, created: result.created, source: "postgres" as const, persisted: true };
   }
   return { data: demo.ensureThread(input), created: false, source: "demo-adapter" as const, persisted: false };
 }
 
 export async function getCheckInContext(input: CheckInWriteInput) {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.getCheckInContext(input), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.getCheckInContext(input), source: "postgres" as const, persisted: true };
   }
   return { data: demo.getCheckInContext(input), source: "demo-adapter" as const, persisted: false };
 }
 
 export async function checkIn(input: CheckInWriteInput) {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.checkIn(input), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.checkIn(input), source: "postgres" as const, persisted: true };
   }
   return { data: demo.checkIn(input), source: "demo-adapter" as const, persisted: false };
 }
 
 export async function checkOut(input: CheckInWriteInput) {
-  if (isSupabaseConfigured()) {
-    return { data: await supabase.checkOut(input), source: "supabase" as const, persisted: true };
+  if (isDatabaseConfigured()) {
+    return { data: await postgres.checkOut(input), source: "postgres" as const, persisted: true };
   }
   return { data: demo.checkOut(input), source: "demo-adapter" as const, persisted: false };
 }

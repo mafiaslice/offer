@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { signInHref } from "@/lib/auth";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
-import { createClient } from "@/lib/supabase/client";
 import { Icon, type IconName } from "@/components/icon";
 import { HolographicReferralCard } from "@/components/holographic-referral-card";
 import { useOffer } from "@/components/offer-provider";
@@ -38,7 +36,7 @@ export function ProfileView() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [gigsCompleted, setGigsCompleted] = useState<number | null>(null);
-  const supabaseReady = isSupabaseConfigured();
+  const liveAuth = source === "postgres";
   const displayName = user?.displayName ?? (source === "demo-adapter" ? "Mafia Slice" : "Guest");
   const handle = user?.email?.split("@")[0] ?? (source === "demo-adapter" ? "slice" : "guest");
   const initials = user?.initials ?? (source === "demo-adapter" ? "MS" : "G");
@@ -89,8 +87,8 @@ export function ProfileView() {
   }
 
   async function signOut() {
-    if (supabaseReady) {
-      await createClient().auth.signOut();
+    if (liveAuth) {
+      await fetch("/api/auth/sign-out", { method: "POST" });
       await refresh();
     }
     router.push("/auth");
@@ -105,7 +103,7 @@ export function ProfileView() {
         <div className="rounded-[23px] bg-[#211A35]/92 p-5 backdrop-blur-xl sm:p-8">
         <div className="flex items-start justify-between gap-4">
           <span className="grid size-20 place-items-center rounded-[1.5rem] bg-gradient-to-br from-[#6B2FE0] via-[#9A3D88] to-[#5646BC] text-xl font-medium text-white shadow-lg">{initials}</span>
-          {supabaseReady && !user ? (
+          {liveAuth && !user ? (
             <Link href={signInHref("/profile")} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-ink">Sign in</Link>
           ) : canEdit ? (
             <button type="button" onClick={startEditing} className="rounded-full border border-white/20 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-white hover:text-ink">Edit profile</button>
@@ -158,7 +156,7 @@ export function ProfileView() {
 
       <section className="rounded-[1.75rem] glass p-5 shadow-card sm:p-7"><div className="flex rounded-2xl bg-white/10 p-1.5"><button type="button" onClick={() => setTab("About")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "About" ? "bg-purple-fill text-white" : "text-purple-gray"}`}>About</button><button type="button" onClick={() => setTab("Gigs")} className={`min-h-11 flex-1 rounded-xl text-sm font-bold transition-colors ${tab === "Gigs" ? "bg-purple-fill text-white" : "text-purple-gray"}`}>Gigs</button></div>{tab === "About" ? <div className="mt-6 space-y-5">{bio ? <div><h2 className="text-lg font-normal tracking-[-0.025em]">What I&apos;m about</h2><p className="mt-2 text-sm leading-6 text-purple-gray">{bio}</p></div> : null}<div className="rounded-2xl bg-white/10 p-4"><p className="text-xs font-bold uppercase tracking-wide text-purple-ink">On Offer</p><p className="mt-1 text-sm font-semibold leading-6">Your display name is what hosts and applicants see. Ratings and identity verification are not in this version.</p></div></div> : <div className="mt-6 space-y-3"><Link href="/my-gigs" className="flex items-center justify-between rounded-2xl bg-white/10 p-4"><span><strong className="block text-sm font-bold">See your gigs</strong><span className="mt-1 block text-xs text-purple-gray">Hosted and joined</span></span><Icon name="arrow-up-right" className="size-5 text-purple-ink" /></Link></div>}</section>
 
-      <section className="space-y-3"><h2 className="px-1 text-lg font-normal tracking-[-0.025em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] glass shadow-card">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-white/15 px-4 text-left last:border-0 hover:bg-white/10"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><Icon name={icon} className="size-5 shrink-0 text-purple-gray" /></button>)}{supabaseReady ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-white/10"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use email to get a one-time code"}</span></span><Icon name={user ? "log-out" : "log-in"} className="size-5 shrink-0 text-purple-gray" /></button> : null}</div></section>
+      <section className="space-y-3"><h2 className="px-1 text-lg font-normal tracking-[-0.025em]">Account</h2><div className="overflow-hidden rounded-[1.5rem] glass shadow-card">{settings.map(([title, description, icon]) => <button key={title} type="button" onClick={title === "Personal details" && canEdit ? startEditing : undefined} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 border-b border-white/15 px-4 text-left last:border-0 hover:bg-white/10"><span><strong className="block text-sm font-bold">{title}</strong><span className="mt-1 block text-xs text-purple-gray">{description}</span></span><Icon name={icon} className="size-5 shrink-0 text-purple-gray" /></button>)}{liveAuth ? <button type="button" onClick={() => { if (user) { void signOut(); } else { router.push(signInHref("/profile")); } }} className="flex min-h-[4.5rem] w-full items-center justify-between gap-4 px-4 text-left hover:bg-white/10"><span><strong className="block text-sm font-bold">{user ? "Sign out" : "Sign in"}</strong><span className="mt-1 block text-xs text-purple-gray">{user ? "End this session on this device" : "Use your email and password"}</span></span><Icon name={user ? "log-out" : "log-in"} className="size-5 shrink-0 text-purple-gray" /></button> : null}</div></section>
     </div>
   );
 }

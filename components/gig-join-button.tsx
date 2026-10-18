@@ -26,8 +26,8 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
   const [busy, setBusy] = useState(false);
   const volunteer = kind !== "Paid gig";
   const isHost = Boolean(hostUserId && user?.id === hostUserId);
-  const needsSignIn = source === "supabase" && ready && !user;
-  const checkingSession = source === "supabase" && !ready;
+  const needsSignIn = source === "postgres" && ready && !user;
+  const checkingSession = source === "postgres" && !ready;
   const applied = sent || hasApplied(slug);
   const joinStatus: StatusButtonState = busy ? "loading" : applied ? "success" : checkingSession ? "loading" : "idle";
   const idleLabel = volunteer ? "Join this gig" : "Apply for this gig";
@@ -36,7 +36,7 @@ export function GigJoinButton({ slug, kind, roles, hostUserId }: GigJoinButtonPr
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    if (source === "supabase" && ready && !user) {
+    if (source === "postgres" && ready && !user) {
       router.push(signInHref(`/gigs/${slug}`));
       return;
     }
