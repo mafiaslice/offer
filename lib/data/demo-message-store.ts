@@ -27,7 +27,7 @@ export function rememberDemoThread(thread: InboxThread) {
   try {
     window.localStorage.setItem(THREAD_KEY, JSON.stringify(next));
   } catch {
-    // Best effort until Supabase is configured.
+    // Best effort for the demo adapter.
   }
 }
 
@@ -38,6 +38,6 @@ export function rememberDemoMessage(message: ChatMessage) {
   try {
     window.localStorage.setItem(MESSAGE_KEY, JSON.stringify(next));
   } catch {
-    // Best effort until Supabase is configured.
+    // Best effort for the demo adapter.
   }
 }

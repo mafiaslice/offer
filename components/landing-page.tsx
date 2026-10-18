@@ -45,7 +45,7 @@ const audiences: Array<{ title: string; body: string; points: string[] }> = [
 ];
 
 async function volunteerStrip(): Promise<{ gigs: GigListItem[]; sample: boolean }> {
-  if (dataSource() === "supabase") {
+  if (dataSource() === "postgres") {
     try {
       const { data } = await listGigs({ kind: "volunteer" });
       const gigs = data.filter((gig) => gig.kindLabel === "Volunteer").slice(0, 3);

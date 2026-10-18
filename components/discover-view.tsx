@@ -27,7 +27,7 @@ export function DiscoverView({ initialGigs, loadError }: DiscoverViewProps) {
   }), [category, initialGigs, kind, query]);
   const topical = filtered.filter((gig) => gig.kindLabel === "Volunteer");
   const paid = filtered.filter((gig) => gig.kindLabel === "Paid gig");
-  const liveEmpty = source === "supabase" && initialGigs.length === 0 && !loadError;
+  const liveEmpty = source === "postgres" && initialGigs.length === 0 && !loadError;
 
   return (
     <div className="space-y-8">

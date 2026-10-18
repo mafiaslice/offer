@@ -11,7 +11,7 @@ Hosts create **Gigs** with **Roles** and available **Slots**. Volunteers and par
 
 ## Stack
 
-Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · ESLint · Supabase (auth + Postgres, optional for local/CI)
+Next.js 16 (App Router) · TypeScript · Tailwind CSS v4 · ESLint · Postgres (Drizzle) · email/password sessions
 
 ## Scripts
 
@@ -21,6 +21,7 @@ npm run dev
 npm run build
 npm run lint
 npm run typecheck
+npm run db:migrate
 npm run seed:demo
 ```
 
@@ -38,38 +39,32 @@ Dev server: [http://localhost:3000](http://localhost:3000) — `/` is the landin
 | `/profile` | Your profile |
 | `/check-in/[token]` | Gig attendance (QR landing) |
 
-Payments, SMS, and identity verification are **not** implemented. In-app Host↔applicant threads and v1 QR check-in/out are. Auth and Postgres use Supabase when env vars are set; otherwise the demo adapter keeps `npm run build` working. `/post` shows an in-page sign-in gate when Supabase is configured and you are signed out. `/check-in/[token]` still requires a session in that case.
+Payments, SMS, and identity verification are **not** implemented. In-app Host↔applicant threads and v1 QR check-in/out are. Auth and Postgres use `DATABASE_URL` when it is set; otherwise the demo adapter keeps `npm run build` working. `/post` shows an in-page sign-in gate when the database is configured and you are signed out. `/check-in/[token]` still requires a session in that case.
 
-## Local with Supabase
+## Local with Postgres
 
-Without credentials the app uses the demo adapter (`meta.source: "demo-adapter"`) and Discover shows in-repo fixtures. When Supabase env is set, Discover reads Postgres only — an empty database shows **Be the first to post a volunteer gig.** with a Post a Gig button, not the demo catalog.
+Without `DATABASE_URL` the app uses the demo adapter (`meta.source: "demo-adapter"`) and Discover shows in-repo fixtures. When `DATABASE_URL` is set, Discover reads Postgres only — an empty database shows **Be the first to post a volunteer gig.** with a Post a Gig button, not the demo catalog.
 
-1. Create a Supabase project and run the SQL in `supabase/migrations/` (schema, message threads, and check-ins).
-2. Enable Email auth. Add `http://localhost:3000/auth/callback` as a redirect URL.
-3. Copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. `npm run dev` and sign in at `/auth` with email OTP or the magic link.
-5. Optional demo rows after you have a profile:
+1. Create a Postgres database (local or Railway).
+2. Copy `.env.example` to `.env.local` and set `DATABASE_URL` and `AUTH_SECRET`.
+3. `npm run db:migrate`
+4. `npm run dev` and create an account at `/auth` with email and password.
+5. Optional starter gigs:
 
 ```bash
 npm run seed:demo
 ```
 
-That reads `SUPABASE_SERVICE_ROLE_KEY` from `.env.local` (never commit it). Without the key:
-
-```bash
-psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
-```
-
-Phone SMS stays gated until Twilio is configured. Full steps: [`docs/data-layer.md`](docs/data-layer.md).
+Phone SMS stays gated. There is no external SMS provider. Railway deploy steps: [`docs/RAILWAY.md`](docs/RAILWAY.md). Data behavior: [`docs/data-layer.md`](docs/data-layer.md).
 
 ## Layout
 
 ```
-app/           App Router pages, auth callback, and APIs
+app/           App Router pages, auth APIs, and health check
 components/    App shell, Discover, Post, My Gigs, auth
-lib/           Data adapters and Supabase clients
-supabase/      Postgres migrations (RLS)
-scripts/       Opt-in demo seed
+lib/           Data adapters, Drizzle client, session auth
+db/migrations  Postgres schema (no RLS)
+scripts/       Migrate and opt-in demo seed
 types/         Domain models (User, Host, Gig, …)
 docs/          Product source of truth, UI tokens, open decisions
 public/        Static assets
@@ -81,10 +76,11 @@ public/        Static assets
 - [`docs/offer-source-of-truth.md`](docs/offer-source-of-truth.md) — product vocabulary and scope
 - [`docs/ui-reference.md`](docs/ui-reference.md) — visual direction and tokens
 - [`docs/open-decisions.md`](docs/open-decisions.md) — unresolved product questions
-- [`docs/data-layer.md`](docs/data-layer.md) — Supabase setup and adapter behavior
+- [`docs/data-layer.md`](docs/data-layer.md) — Postgres setup and adapter behavior
+- [`docs/RAILWAY.md`](docs/RAILWAY.md) — Railway env vars, migrate, and health check
 - [`docs/e2e-walkthrough.md`](docs/e2e-walkthrough.md) — local click path to verify Discover → detail → apply → My Gigs → Messages → Post → Profile
 - [`docs/icons.md`](docs/icons.md) — Rune icon source and mapping
 
 ## Status
 
-Auth + Postgres are wired to Supabase when env vars are present. In-app Host↔applicant messaging and v1 QR check-in/out are live when env is set. Payments and identity verification are not. Pixel-level UI waits on design reference boards.
+Auth + Postgres are wired when `DATABASE_URL` is present. In-app Host↔applicant messaging and v1 QR check-in/out are live when env is set. Payments and identity verification are not. Pixel-level UI waits on design reference boards.

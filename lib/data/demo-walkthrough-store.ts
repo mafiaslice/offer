@@ -30,7 +30,7 @@ function writeStore(store: DemoWalkthroughStore) {
     mkdirSync(join(process.cwd(), ".next", "cache"), { recursive: true });
     writeFileSync(FILE, JSON.stringify(store));
   } catch {
-    // Best effort until Supabase is configured.
+    // Best effort for the demo adapter.
   }
 }
 

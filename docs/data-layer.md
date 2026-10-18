@@ -4,8 +4,8 @@ The app uses an adapter so CI and local `npm run build` work without credentials
 
 | Condition | `meta.source` | Behavior |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set | `supabase` | Auth cookies + Postgres via RLS |
-| Either public env var is missing | `demo-adapter` | In-repo fixtures; writes are not durable |
+| `DATABASE_URL` is set | `postgres` | Email/password session cookies + Postgres. Ownership is checked in server code. |
+| `DATABASE_URL` is missing | `demo-adapter` | In-repo fixtures; writes are not durable |
 
 Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, messages, check-in/out) go through the same adapters and the App Router APIs:
 
@@ -16,7 +16,11 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, mes
 - `PATCH /api/applications/[id]` — `accepted` \| `declined` \| `withdrawn`
 - `GET /api/my-gigs`
 - `GET` / `PATCH /api/me` — session profile; GET creates a profiles row if the signed-in user is missing one; PATCH merges fields
-- `GET /api/threads` — inbox + people you can start a 1:1 thread with (auth required when Supabase is configured)
+- `POST /api/auth/sign-up` — `{ email, password }` creates a user, profile, and session cookie
+- `POST /api/auth/sign-in` — `{ email, password }`
+- `POST /api/auth/sign-out`
+- `GET /api/healthz` — database reachability
+- `GET /api/threads` — inbox + people you can start a 1:1 thread with (auth required when Postgres is configured)
 - `POST /api/threads` — `{ applicationId }` or `{ gigSlug }`; opens or returns the Host↔applicant thread (does not auto-create on apply/accept)
 - `GET /api/threads/[id]/messages` — messages in a thread; marks the viewer’s side read
 - `POST /api/threads/[id]/messages` — `{ body }` send a message
@@ -24,35 +28,24 @@ Reads go through `lib/data`. Writes (create gig, apply, host accept/decline, mes
 - `POST /api/check-ins` — `{ token \| gigSlug, userId?, slotId? }` check in (self, or Host on behalf of an accepted participant)
 - `POST /api/check-ins/checkout` — same body; sets `checked_out_at`
 
-When Supabase is configured, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Gigs you create and applications you send in the demo adapter are written to `.next/cache` so Discover and My Gigs stay in sync during a local walkthrough (not durable product storage). Check-in writes in the demo adapter stay in server memory for that process. `/post` shows an in-page sign-in gate for unsigned visitors when Supabase is configured. `/check-in/[token]` redirects unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
+When `DATABASE_URL` is set, persistence is Postgres (not `localStorage`). The demo adapter still uses `localStorage` only for join-state and demo-sent messages so the UI works in CI. Gigs you create and applications you send in the demo adapter are written to `.next/cache` so Discover and My Gigs stay in sync during a local walkthrough (not durable product storage). Check-in writes in the demo adapter stay in server memory for that process. `/post` shows an in-page sign-in gate for unsigned visitors when Postgres is configured. `/check-in/[token]` redirects unsigned users to `/auth?next=…`. Host accept/decline on My Gigs does the same on 401. Messaging APIs return 401 until signed in.
 
-## Local with Supabase
+## Local with Postgres
 
-1. Create a Supabase project.
-2. Run the SQL in `supabase/migrations/` (`20260910000001_init_offer_schema.sql`, `20260910000002_message_threads.sql`, and `20260910000003_check_ins.sql`) in the SQL editor or via `supabase db push`.
-3. Auth → Providers → **Email** on. Enable email OTP / magic links. Confirm email can be off for local testing.
-4. Auth → URL configuration:
-   - Site URL: `http://localhost:3000`
-   - Redirect: `http://localhost:3000/auth/callback`
-5. Copy Project URL and anon/publishable key into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-6. Restart `npm run dev`. Sign in at `/auth` with email. Click the magic link or enter the 6-digit code.
-7. Optional demo rows (after a profile exists):
+1. Create a database and set `DATABASE_URL` and `AUTH_SECRET` in `.env.local`. See [`RAILWAY.md`](./RAILWAY.md).
+2. `npm run db:migrate` applies `db/migrations/0001_offer_schema.sql`.
+3. Restart `npm run dev`. Create an account at `/auth` with email and password.
+4. Optional starter gigs:
 
 ```bash
 npm run seed:demo
 ```
 
-`npm run seed:demo` reads `SUPABASE_SERVICE_ROLE_KEY` from `.env.local` only. Do not commit that key. Without it:
+This is **opt-in** and is not required for build. If no profile exists, the script creates a seed host. Seeded rows include roles (with descriptions), slots, and a fuller summary so gig detail feels real. When `DATABASE_URL` is set and the database has no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button — it does not fall back to the demo catalog.
 
-```bash
-psql "$DATABASE_URL" -f scripts/seed-demo-gigs.sql
-```
+Do not commit `.env.local`. The app connects with `DATABASE_URL` and checks ownership in server code. There is no row level security.
 
-This is **opt-in** and is not required for build. Seeded rows include roles (with descriptions), slots, and a fuller summary so gig detail feels real. When Supabase env is set and the database has no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button — it does not fall back to the demo catalog.
-
-Do not commit `.env.local`. The app uses anon + RLS. `SUPABASE_SERVICE_ROLE_KEY` is unused by the Next.js app (optional for the seed script only).
-
-Phone SMS needs Twilio on the project. Keep `NEXT_PUBLIC_SUPABASE_SMS_AUTH` unset until that is configured; the phone UI stays visible and gated.
+Phone SMS is not available. The phone step stays visible and explains that SMS is not configured.
 
 ## Technical choices (not product answers)
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { DataSource, EnsureThreadInput, InboxThread, ProfilePatch, SessionProfile, UserApplication } from "@/lib/data/types";
 import { rememberDemoThread } from "@/lib/data/demo-message-store";
 
@@ -39,9 +38,8 @@ function toLocal(application: UserApplication): LocalApplication {
   };
 }
 
-export function OfferProvider({ children }: { children: ReactNode }) {
-  const source: DataSource = isSupabaseConfigured() ? "supabase" : "demo-adapter";
-  const [ready, setReady] = useState(source !== "supabase");
+export function OfferProvider({ children, source }: { children: ReactNode; source: DataSource }) {
+  const [ready, setReady] = useState(source !== "postgres");
   const [user, setUser] = useState<SessionProfile | null>(null);
   const [applications, setApplications] = useState<LocalApplication[]>([]);
 
@@ -50,7 +48,7 @@ export function OfferProvider({ children }: { children: ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
-      // Best effort until Supabase is configured.
+      // Best effort for the demo adapter. Local writes are not durable product storage.
     }
   }, [source]);
 
@@ -58,11 +56,11 @@ export function OfferProvider({ children }: { children: ReactNode }) {
     const me = await fetch("/api/me");
     if (me.ok) {
       const body = (await me.json()) as { data: SessionProfile | null };
-      if (source === "supabase" || body.data) {
+      if (source === "postgres" || body.data) {
         setUser(body.data);
       }
     }
-    if (source === "supabase") {
+    if (source === "postgres") {
       const mine = await fetch("/api/my-gigs");
       if (mine.ok) {
         const body = (await mine.json()) as { data: { applications?: UserApplication[] } };
@@ -74,7 +72,7 @@ export function OfferProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let timer: number | undefined;
-    if (source === "supabase") {
+    if (source === "postgres") {
       timer = window.setTimeout(() => {
         void refresh();
       }, 0);

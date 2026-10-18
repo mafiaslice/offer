@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PostGigForm } from "@/components/post-gig-form";
 import { SignInGate } from "@/components/sign-in-gate";
 import { getSessionProfile } from "@/lib/data";
-import { isSupabaseConfigured } from "@/lib/supabase/env";
+import { isDatabaseConfigured } from "@/lib/db/env";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PostPage() {
-  const session = isSupabaseConfigured() ? await getSessionProfile().catch(() => null) : { id: "demo" };
+  const session = isDatabaseConfigured() ? await getSessionProfile().catch(() => null) : { id: "demo" };
   if (!session) {
     return (
       <SignInGate

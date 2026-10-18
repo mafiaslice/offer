@@ -5,7 +5,7 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 ## Identity and accounts
 
 - **Decided:** Host is a **capability on User**. Anyone signed in can post a Gig. There is no separate Host account type.
-- **Decided:** v1 auth is **Supabase email magic link / OTP**, with session cookies for SSR. Phone SMS is optional and gated until Twilio is configured on the project.
+- **Decided:** v1 auth is **email + password** in Postgres, with an httpOnly session cookie. Phone SMS stays gated; there is no SMS provider.
 - What appears on **Profile** beyond a display name (and optional bio / intent collected at signup).
 - Whether identity verification exists, and when it is required. Not in this scaffold.
 
@@ -58,21 +58,21 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 ## Discover
 
 - Ranking, filters, geography, and whether volunteer gigs are visually/algorithmically first.
-- **Decided (v1 empty):** when Supabase env is set and there are no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button. Demo fixtures are only used when Supabase env is missing.
+- **Decided (v1 empty):** when `DATABASE_URL` is set and there are no open gigs, Discover shows **Be the first to post a volunteer gig.** with a Post a Gig button. Demo fixtures are only used when `DATABASE_URL` is missing.
 - What a Host sees vs a Volunteer/Participant beyond that empty state.
 - Ranking still does not use geography or volunteer-first algorithms — volunteer cards are listed first in the Discover layout only.
 
 ## Gig detail
 
 - **Decided (v1):** gig detail is `title`, host, place, time, `summary` (used as about/body), roles, slots/spots, and apply/join. There is no separate `body` column; adapters map `gigs.summary` to both summary and about.
-- **Decided (v1 signed-out apply):** with Supabase configured, the join/apply CTA routes to `/auth?next=/gigs/[slug]`. The demo adapter still lets you apply without a session.
+- **Decided (v1 signed-out apply):** with Postgres configured, the join/apply CTA routes to `/auth?next=/gigs/[slug]`. The demo adapter still lets you apply without a session.
 - **Decided (v1 missing data):** unknown slugs and adapter failures render an empty state on the gig page. They do not use the Next.js error overlay as the primary UI.
 - Whether a missing description should block apply (v1 still allows “General support”).
 
 ## Post
 
 - Minimum fields to create a Gig. v1 requires name, summary, place, date, and start time.
-- **Decided:** Post is not a separate Host-only account. It requires being signed in when Supabase is configured.
+- **Decided:** Post is not a separate Host-only account. It requires being signed in when Postgres is configured.
 - **Decided (v1 walkthrough):** unsigned visitors see an in-page sign-in gate on `/post` (not a raw crash). After a successful create, the app goes to My Gigs.
 
 ## Profile
@@ -93,4 +93,4 @@ Do not invent answers in code. When a feature needs one of these, add a short no
 
 ## Data
 
-- **Decided:** Supabase is the production auth + Postgres provider. See [`data-layer.md`](./data-layer.md).
+- **Decided:** Production auth + Postgres run on Railway. See [`data-layer.md`](./data-layer.md) and [`RAILWAY.md`](./RAILWAY.md).

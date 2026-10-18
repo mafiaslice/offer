@@ -116,11 +116,11 @@ export function MyGigsView({ hosted, joined, reviewQueue, loadError }: MyGigsVie
   const joinedCount = joined.length;
   const hostedCount = hosted.length;
   const completedCount = gigs.filter((gig) => gig.status === "Completed").length;
-  const needsSignIn = source === "supabase" && ready && !user;
+  const needsSignIn = source === "postgres" && ready && !user;
   const showReview = reviewQueue.length > 0 && status === "Upcoming" && mode !== "Joined";
 
   async function openThread(input: EnsureThreadInput) {
-    if (source === "supabase" && ready && !user) {
+    if (source === "postgres" && ready && !user) {
       router.push(signInHref("/my-gigs"));
       return;
     }
@@ -166,7 +166,7 @@ export function MyGigsView({ hosted, joined, reviewQueue, loadError }: MyGigsVie
         </div>
       )) : <div className="rounded-[1.5rem] border border-dashed border-white/20 glass px-5 py-12 text-center"><p className="text-base font-bold">Nothing here yet</p><p className="mt-2 text-sm leading-6 text-purple-gray">Your {mode === "All" ? "gigs" : mode.toLowerCase() + " gigs"} will appear here.</p><Link href="/discover" className="mt-5 inline-flex min-h-11 items-center rounded-full bg-purple-fill px-5 text-sm font-bold text-white">Discover gigs</Link></div>}</div>
       {showReview ? <ApplicationReview applicants={reviewQueue} onMessage={(applicationId) => { void openThread({ applicationId }); }} onDecide={async (id, nextStatus) => {
-        if (source === "supabase" && ready && !user) {
+        if (source === "postgres" && ready && !user) {
           router.push(signInHref("/my-gigs"));
           return false;
         }

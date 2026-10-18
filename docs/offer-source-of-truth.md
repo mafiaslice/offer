@@ -55,4 +55,4 @@ These stay out of scope (placeholders and types only):
 - Payments, escrow, wallets
 - Live discover ranking
 
-v1 QR check-in / check-out for Gig attendance is implemented. In-app Host↔applicant messaging is implemented (1:1 per gig). Group chat and email/SMS copies are still open. Auth and Postgres are Supabase when env is set; otherwise a demo adapter. See [`data-layer.md`](./data-layer.md) and [`open-decisions.md`](./open-decisions.md).
+v1 QR check-in / check-out for Gig attendance is implemented. In-app Host↔applicant messaging is implemented (1:1 per gig). Group chat and email/SMS copies are still open. Auth and Postgres run when `DATABASE_URL` is set; otherwise a demo adapter. See [`data-layer.md`](./data-layer.md) and [`open-decisions.md`](./open-decisions.md).

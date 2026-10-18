@@ -120,7 +120,7 @@ export function PostGigForm() {
       setStep(problem.step);
       return;
     }
-    if (source === "supabase" && ready && !user) {
+    if (source === "postgres" && ready && !user) {
       router.push(signInHref("/post"));
       return;
     }
@@ -352,7 +352,7 @@ export function PostGigForm() {
               <div role="status" className="rounded-2xl bg-success/15 p-4 text-sm font-semibold text-success">
                 {persisted
                   ? "Your gig is live. Anyone signed in can host — no separate Host account."
-                  : "Your gig draft is ready. Publishing persists once Supabase env vars are set."}
+                  : "Your gig draft is ready. Publishing persists once DATABASE_URL is set."}
                 {persisted && slug ? (
                   <button type="button" onClick={() => router.push(`/gigs/${slug}`)} className="mt-3 block text-sm font-bold text-white underline">
                     View gig
