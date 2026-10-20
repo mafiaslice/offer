@@ -1,4 +1,3 @@
-/opt/homebrew/Library/Homebrew/cmd/shellenv.sh: line 18: /bin/ps: Operation not permitted
 const marks = ["Offer community", "Trusted hands", "Volunteer first", "Event crews", "Local projects"];
 
 export function LogoMarquee() {
